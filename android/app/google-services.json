@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "707519257282",
+    "project_id": "lokconnect",
+    "storage_bucket": "lokconnect.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:707519257282:android:de2527c0fe73012287b95b",
+        "android_client_info": {
+          "package_name": "com.example.lokconnect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5WoRy6u7kp-QfqUxv5wZYVUMWn0Db874"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
