@@ -18,4 +18,5 @@ class CustomColors {
 class CustomTextStyle {
    static const TextStyle headingTextStyle = TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20);
    static const TextStyle subHeadingTextStyle = TextStyle(fontWeight: FontWeight.w600, color: Colors.black, fontSize: 16);
+      static const TextStyle documentTextStyle = TextStyle(fontWeight: FontWeight.w600, color: Colors.black, fontSize: 14);
 }

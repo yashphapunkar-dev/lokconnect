@@ -13,4 +13,8 @@ class OTPSuccessEvent extends LoginEvent{
    OTPSuccessEvent({required this.verificationId});
 }
 
-class OTPFailureEvent extends LoginEvent{}
+class OTPErrorEvent extends LoginEvent{
+  final String errorMessage;
+  OTPErrorEvent({required this.errorMessage});
+}
+

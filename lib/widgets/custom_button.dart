@@ -28,6 +28,7 @@ class CustomButton extends StatelessWidget {
           onPress();
         },
         child: Container(
+          height: 50,
           decoration: BoxDecoration(
               color: Colors.grey.shade900,
               borderRadius: BorderRadius.all(Radius.circular(15))),

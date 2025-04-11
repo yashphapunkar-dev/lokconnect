@@ -1,18 +1,23 @@
 part of 'user_addition_bloc.dart';
+class UserAdditionState extends Equatable {
+  final bool isLoading;
+  final Map<String, PlatformFile> uploadedDocuments;
 
-// @immutable
-// sealed class UserAdditionState {}
+  UserAdditionState({
+    this.isLoading = false,
+    this.uploadedDocuments = const {},
+  });
 
-// final class UserAdditionInitial extends UserAdditionState {}
-
-class UserAdditionState {
-  final Map<String, File?> uploadedDocuments;
-
-  UserAdditionState({required this.uploadedDocuments});
-
-  UserAdditionState copyWith({Map<String, File?>? uploadedDocuments}) {
+  UserAdditionState copyWith({
+    bool? isLoading,
+    Map<String, PlatformFile>? uploadedDocuments,
+  }) {
     return UserAdditionState(
+      isLoading: isLoading ?? this.isLoading,
       uploadedDocuments: uploadedDocuments ?? this.uploadedDocuments,
     );
   }
+
+  @override
+  List<Object?> get props => [isLoading, uploadedDocuments];
 }
