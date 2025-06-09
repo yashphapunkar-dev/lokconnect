@@ -18,10 +18,9 @@ class UserDetailsBloc extends Bloc<UserDetailsEvent, UserDetailsState> {
     LoadUserDetailsEvent event,
     Emitter<UserDetailsState> emit,
   ) async {
-    print("EVENT TESTING");
-    print(event);
-    emit(UserDetailsLoading());
 
+    emit(UserDetailsLoading());
+    
     try {
       final doc = await _firestore.collection('users').doc(event.userId).get();
       final userData = await doc.data();

@@ -11,6 +11,8 @@ import 'package:lokconnect/widgets/info_tile.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:html' as html;
 
+import 'package:lokconnect/widgets/uploading_model.dart';
+
 class UserDetailsScreen extends StatefulWidget {
   final String userId;
 
@@ -21,13 +23,13 @@ class UserDetailsScreen extends StatefulWidget {
 }
 
 class _UserDetailsScreenState extends State<UserDetailsScreen> {
-
   Map<String, TextEditingController> textFieldControllers = {
     "firstName": TextEditingController(),
     "lastName": TextEditingController(),
     "email": TextEditingController(),
     "phoneNumber": TextEditingController(),
     "plotNumber": TextEditingController(),
+    "membershipNumber": TextEditingController(),
   };
 
   double widthHandler(double width) {
@@ -41,7 +43,41 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
     return 0;
   }
 
+  onPressDeleteDoc(String docName) {
+    setState(() {
+      docsLoading = true;
+    });
+
+    FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
+      'documents.$docName': FieldValue.delete(),
+    }).then((_) {
+      setState(() {
+        docsLoading = false;
+      });
+    }).catchError((e) {
+      setState(() {
+        docsLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to delete document: $e")),
+      );
+    });
+  }
+
+  Stream<Map<String, String>> getDocumentsStream(String userId) {
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .snapshots()
+        .map((docSnapshot) {
+      final data = docSnapshot.data();
+      if (data == null || data['documents'] == null) return {};
+      return Map<String, String>.from(data['documents']);
+    });
+  }
+
   bool isLoading = false;
+  bool docsLoading = false;
 
   Future<void> updateUserProfileAndDocuments({
     required Map<String, TextEditingController> textFieldControllers,
@@ -60,6 +96,8 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
         "email": textFieldControllers["email"]?.text.trim(),
         "phoneNumber": textFieldControllers["phoneNumber"]?.text.trim(),
         "plotNumber": textFieldControllers["plotNumber"]?.text.trim(),
+        "membershipNumber":
+            textFieldControllers["membershipNumber"]?.text.trim(),
         "documents": updatedDocuments,
       });
 
@@ -83,7 +121,6 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
       onLoading(false);
     }
   }
-
 
   Future<void> showAddDocumentDialog(
       BuildContext context, String userId) async {
@@ -121,7 +158,6 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                           selectedFileName = result.files.single.name;
                         }
 
-                        // Rebuild dialog with new state
                         (context as Element).markNeedsBuild();
                       },
                       icon: Icon(Icons.upload_file),
@@ -164,7 +200,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
 
                     try {
                       setState(() {
-                        isLoading = true;
+                        docsLoading = true;
                       });
                       final ref = FirebaseStorage.instance
                           .ref()
@@ -184,16 +220,11 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
 
                       await userDoc.update({"documents": existingDocuments});
 
-                       setState(() {
-                        isLoading = false;
-                      });
-                      
-                      userDetailsBloc.add(LoadUserDetailsEvent(widget.userId));
-
-                    } catch (e) {
                       setState(() {
-                        isLoading = false;
+                        docsLoading = false;
                       });
+                    
+                    } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text("Upload failed: $e")),
                       );
@@ -207,9 +238,6 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
       },
     );
   }
-
-
-  UserDetailsBloc userDetailsBloc = UserDetailsBloc();
 
   @override
   Widget build(BuildContext context) {
@@ -261,7 +289,6 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
           ),
         ],
       ),
-
       body: BlocBuilder<UserDetailsBloc, UserDetailsState>(
         builder: (context, state) {
           if (state is UserDetailsLoading) {
@@ -309,6 +336,12 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                                   textFieldControllers['plotNumber'],
                               value: "${state.user.plotNumber}",
                               filedName: "Plot Number"),
+                          InfoTile(
+                            textController:
+                                textFieldControllers['membershipNumber'],
+                            value: state.user.membershipNumber,
+                            filedName: "Membership Number",
+                          ),
                         ],
                       ),
                     ),
@@ -332,87 +365,96 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                                 ),
                               ),
                               const SizedBox(height: 20),
-                              GridView.builder(
-                                itemCount: state.user.documents!.length,
-                                gridDelegate:
-                                    SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: widthHandler(
-                                          MediaQuery.sizeOf(context).width)
-                                      .toInt(),
-                                  crossAxisSpacing: 10,
-                                  mainAxisSpacing: 10,
-                                ),
-                                shrinkWrap: true,
-                                itemBuilder: (context, index) {
-                                  print("INDEX");
-                                  final docEntries =
-                                      state.user.documents!.entries.toList();
-                                  print(docEntries);
 
-                                  final docName = docEntries[index].key;
-                                  final docUrl = docEntries[index].value;
+                              StreamBuilder<Map<String, String>>(
+                                stream: getDocumentsStream(widget
+                                    .userId),
+                                builder: (context, snapshot) {
+                                  if (isLoading || !snapshot.hasData) {
+                                      return Center(child: CircularProgressIndicator());
+                                  }
 
-                                  print(docName);
-                                  print(docUrl);
+                                  final documents = snapshot.data!;
+                                  final docEntries = documents.entries.toList();
 
-                                  return Card(
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12)),
-                                    elevation: 3,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(12),
-                                        color: Colors.white,
-                                      ),
-                                      padding: const EdgeInsets.all(12.0),
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceAround,
-                                        children: [
-                                          IconButton(
-                                            icon: const Icon(
-                                                Icons.picture_as_pdf,
-                                                size: 50,
-                                                color: Color(0xFFEF4444)),
-                                            onPressed: () {
-                                              final url = docUrl;
-                                              if (kIsWeb) {
-                                                html.window.open(url, '_blank');
-                                              } else {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (_) =>
-                                                        PDFViewerScreen(
-                                                            url: url),
-                                                  ),
-                                                );
-                                              }
-                                            },
-                                          ),
-                                          const SizedBox(height: 10),
-                                          Text(
-                                            docName,
-                                            style: CustomTextStyle
-                                                .subHeadingTextStyle,
-                                          ),
-                                          TextButton.icon(
-                                            onPressed: () {
-                                              setState(() {
-                                                state.user.documents!.remove(docName);
-                                              });
-                                            },
-                                            icon: const Icon(Icons.delete,
-                                                color: Colors.red),
-                                            label: const Text("Delete",
-                                                style: TextStyle(
-                                                    color: Colors.red)),
-                                          )
-                                        ],
-                                      ),
+                                  return GridView.builder(
+                                    itemCount: docEntries.length,
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: widthHandler(
+                                              MediaQuery.sizeOf(context).width)
+                                          .toInt(),
+                                      crossAxisSpacing: 10,
+                                      mainAxisSpacing: 10,
                                     ),
+                                    shrinkWrap: true,
+                                    itemBuilder: (context, index) {
+                                      final docName = docEntries[index].key;
+                                      final docUrl = docEntries[index].value;
+
+                                      return Card(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        elevation: 3,
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            color: Colors.white,
+                                          ),
+                                          padding: const EdgeInsets.all(12.0),
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceAround,
+                                            children: [
+                                              IconButton(
+                                                icon: const Icon(
+                                                  Icons.picture_as_pdf,
+                                                  size: 50,
+                                                  color: Color(0xFFEF4444),
+                                                ),
+                                                onPressed: () {
+                                                  if (kIsWeb) {
+                                                    html.window
+                                                        .open(docUrl, '_blank');
+                                                  } else {
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (_) =>
+                                                            PDFViewerScreen(
+                                                                url: docUrl),
+                                                      ),
+                                                    );
+                                                  }
+                                                },
+                                              ),
+                                              const SizedBox(height: 10),
+                                              Text(
+                                                docName,
+                                                style: CustomTextStyle
+                                                    .subHeadingTextStyle,
+                                              ),
+                                              TextButton.icon(
+                                                onPressed: () {
+                                                  onPressDeleteDoc(docName);
+                                                },
+                                                icon: const Icon(Icons.delete,
+                                                    color: Colors.red),
+                                                label: const Text("Delete",
+                                                    style: TextStyle(
+                                                        color: Colors.red)),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
                                   );
+                               
+                               
                                 },
                               ),
                             ],
@@ -420,10 +462,122 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                         ),
                       ),
                     ),
+
+                    // Expanded(
+                    //   child: Container(
+                    //     decoration: const BoxDecoration(
+                    //       color: CustomColors.primaryColor,
+                    //       borderRadius:
+                    //           BorderRadius.only(topRight: Radius.circular(40)),
+                    //     ),
+                    //     child: Padding(
+                    //       padding: const EdgeInsets.all(20.0),
+                    //       child: ListView(
+                    //         children: [
+                    //           const Text(
+                    //             "Documents",
+                    //             style: TextStyle(
+                    //               fontSize: 18,
+                    //               fontWeight: FontWeight.bold,
+                    //               color: Colors.black,
+                    //             ),
+                    //           ),
+                    //           const SizedBox(height: 20),
+                    //           GridView.builder(
+                    //             itemCount: state.user.documents!.length,
+                    //             gridDelegate:
+                    //                 SliverGridDelegateWithFixedCrossAxisCount(
+                    //               crossAxisCount: widthHandler(
+                    //                       MediaQuery.sizeOf(context).width)
+                    //                   .toInt(),
+                    //               crossAxisSpacing: 10,
+                    //               mainAxisSpacing: 10,
+                    //             ),
+                    //             shrinkWrap: true,
+                    //             itemBuilder: (context, index) {
+                    //               print("INDEX");
+                    //               final docEntries =
+                    //                   state.user.documents!.entries.toList();
+                    //               print(docEntries);
+
+                    //               final docName = docEntries[index].key;
+                    //               final docUrl = docEntries[index].value;
+
+                    //               print(docName);
+                    //               print(docUrl);
+
+                    //               return Card(
+                    //                 shape: RoundedRectangleBorder(
+                    //                     borderRadius:
+                    //                         BorderRadius.circular(12)),
+                    //                 elevation: 3,
+                    //                 child: Container(
+                    //                   decoration: BoxDecoration(
+                    //                     borderRadius: BorderRadius.circular(12),
+                    //                     color: Colors.white,
+                    //                   ),
+                    //                   padding: const EdgeInsets.all(12.0),
+                    //                   child: Column(
+                    //                     mainAxisAlignment:
+                    //                         MainAxisAlignment.spaceAround,
+                    //                     children: [
+                    //                       IconButton(
+                    //                         icon: const Icon(
+                    //                             Icons.picture_as_pdf,
+                    //                             size: 50,
+                    //                             color: Color(0xFFEF4444)),
+                    //                         onPressed: () {
+                    //                           final url = docUrl;
+                    //                           if (kIsWeb) {
+                    //                             html.window.open(url, '_blank');
+                    //                           } else {
+                    //                             Navigator.push(
+                    //                               context,
+                    //                               MaterialPageRoute(
+                    //                                 builder: (_) =>
+                    //                                     PDFViewerScreen(
+                    //                                         url: url),
+                    //                               ),
+                    //                             );
+                    //                           }
+                    //                         },
+                    //                       ),
+                    //                       const SizedBox(height: 10),
+                    //                       Text(
+                    //                         docName,
+                    //                         style: CustomTextStyle
+                    //                             .subHeadingTextStyle,
+                    //                       ),
+                    //                       TextButton.icon(
+                    //                         onPressed: () {
+                    //                           setState(() {
+                    //                             state.user.documents!
+                    //                                 .remove(docName);
+                    //                           });
+                    //                         },
+                    //                         icon: const Icon(Icons.delete,
+                    //                             color: Colors.red),
+                    //                         label: const Text("Delete",
+                    //                             style: TextStyle(
+                    //                                 color: Colors.red)),
+                    //                       )
+                    //                     ],
+                    //                   ),
+                    //                 ),
+                    //               );
+                    //             },
+                    //           ),
+                    //         ],
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
                   ],
                 ),
-                isLoading
-                    ? Center(
+                docsLoading ? UploadingModal() : SizedBox.shrink(),
+
+                isLoading ?
+                     Center(
                         child: CircularProgressIndicator(
                             color: CustomColors.forestBrown))
                     : SizedBox.shrink(),

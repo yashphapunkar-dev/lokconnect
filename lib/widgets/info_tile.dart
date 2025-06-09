@@ -15,7 +15,7 @@ class InfoTile extends StatelessWidget {
 
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 40),
       decoration: const BoxDecoration(
         borderRadius: BorderRadius.all(Radius.circular(30)),
       ),

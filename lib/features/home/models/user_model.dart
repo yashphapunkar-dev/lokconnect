@@ -5,6 +5,7 @@ class UserModel {
   final String email;
   final String phoneNumber;
   final String plotNumber;
+  final String membershipNumber;
   final String? userId;
   final Map<String, dynamic>? documents; // <-- Optional documents list
 
@@ -15,6 +16,7 @@ class UserModel {
     required this.phoneNumber,
     required this.email,
     required this.plotNumber,
+    required this.membershipNumber,
     this.userId,
     this.documents, // <-- Optional in constructor
   });
@@ -23,6 +25,7 @@ class UserModel {
     return UserModel(
       userId: userId,
       id: map['id'] ?? '',
+      membershipNumber: map["membershipNumber"] ?? '',
       phoneNumber: map['phoneNumber'] ?? '',
       firstName: map['firstName'] ?? '',
       lastName: map['lastName'] ?? '',
