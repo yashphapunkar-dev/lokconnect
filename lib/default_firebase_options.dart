@@ -18,7 +18,7 @@ class DefaultFirebaseOptions {
         apiKey: "AIzaSyDK4KXDUNwHZxehgDFHeCX5I6SWjJau4ik",
         appId: "1:707519257282:android:d2a01886e04946e487b95b",
         messagingSenderId: "your-messaging-sender-id",
-        projectId: "lokconnect",
+        projectId: "lokconnect1",
         storageBucket: "lokconnect.firebasestorage.app",
       );
     }

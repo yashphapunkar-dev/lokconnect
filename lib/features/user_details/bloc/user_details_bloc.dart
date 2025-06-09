@@ -18,11 +18,13 @@ class UserDetailsBloc extends Bloc<UserDetailsEvent, UserDetailsState> {
     LoadUserDetailsEvent event,
     Emitter<UserDetailsState> emit,
   ) async {
+    print("EVENT TESTING");
+    print(event);
     emit(UserDetailsLoading());
 
     try {
       final doc = await _firestore.collection('users').doc(event.userId).get();
-      final userData = doc.data();
+      final userData = await doc.data();
 
       if (userData == null) {
         emit(UserDetailsError(message: "User not found"));
@@ -30,10 +32,14 @@ class UserDetailsBloc extends Bloc<UserDetailsEvent, UserDetailsState> {
       }
 
       final user = UserModel.fromMap(userData);
-      final documents = userData['documents'] as Map<String, dynamic>? ?? {};
+                  
+      final documents = userData['documents'] as Map<String, dynamic>;
+
 
       emit(UserDetailsLoaded(user: user, documents: documents));
     } catch (e) {
+      print("TEST EERRROR");
+      print(e);
       emit(UserDetailsError(message: "Failed to fetch user details"));
     }
   }

@@ -1,6 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lokconnect/features/home/ui/home.dart';
 import 'package:lokconnect/features/login/bloc/login_bloc.dart';
 import 'package:lokconnect/features/login/ui/otp_verification.dart';
 import 'package:lokconnect/widgets/custom_alert.dart';
@@ -19,6 +21,8 @@ class _LoginState extends State<Login> {
   final LoginBloc loginBloc = LoginBloc();
   final Color mainColor = Color(0xfff1efe7);
   final TextEditingController _phoneController = TextEditingController();
+    final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   bool _isLoading = false;
 
@@ -49,6 +53,46 @@ class _LoginState extends State<Login> {
     loginBloc.add(SendOTPEvent(phoneNumber: phoneNumber));
   }
 
+
+   Future<void> _handleEmailLogin() async {
+    String email = _emailController.text.trim();
+    String password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      showCustomAlert(
+        context: context,
+        title: "Error",
+        message: "Email and password are required.",
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      setState(() {
+        _isLoading = false;
+      });
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => Home()),
+      );
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      showCustomAlert(
+        context: context,
+        title: "Login Failed",
+        message: e.message ?? "Something went wrong.",
+      );
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<LoginBloc, LoginState>(
@@ -82,7 +126,7 @@ class _LoginState extends State<Login> {
             child: _isLoading
                 ? Center(child: CircularProgressIndicator()) // Show loader while logging in
                 : CustomButton(
-                    onPress: _handleLogin,
+                    onPress:  kIsWeb ? _handleEmailLogin : _handleLogin,
                     buttonText: "Login",
                   ),
           ),
@@ -113,12 +157,39 @@ class _LoginState extends State<Login> {
                         margin: EdgeInsets.only(left: 20, right: 20),
                         child: Column(
                           children: [
-                            CustomInput(
-                              textController: _phoneController,
-                              hintText: "Enter your mobile number",
-                              onSubmit: (value) => _handleLogin(),
-                              // keyboardType: TextInputType.phone,
-                            ),
+
+                            if (kIsWeb) ...[
+                          CustomInput(
+                            textController: _emailController,
+                            hintText: "Enter your email",
+                            onSubmit: (_) => _handleEmailLogin(),
+                          ),
+                          SizedBox(height: 12),
+                          CustomInput(
+                            textController: _passwordController,
+                            hintText: "Enter your password",
+                            // isObscure: true,
+                            onSubmit: (_) => _handleEmailLogin(),
+                          ),
+                        ] else ...[
+                          CustomInput(
+                            textController: _phoneController,
+                            hintText: "Enter your mobile number",
+                            onSubmit: (_) => _handleLogin(),
+                          ),
+                        ],
+
+
+                            // CustomInput(
+                            //   textController: _phoneController,
+                            //   hintText: "Enter your mobile number",
+                            //   onSubmit: (value) => _handleLogin(),
+                            //   // keyboardType: TextInputType.phone,
+                            // ),
+
+
+
+
                           ],
                         ),
                       ),

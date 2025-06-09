@@ -7,12 +7,14 @@ import "package:lokconnect/features/splashscreen/splashscreen.dart";
 import 'package:firebase_core/firebase_core.dart';
 import 'package:lokconnect/default_firebase_options.dart';
 import 'package:lokconnect/features/user_addition/bloc/user_addition_bloc.dart';
+import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     // name: 'lokconnect',
-    options: DefaultFirebaseOptions.currentPlatform);
+    options: DefaultFirebaseOptions.currentPlatform
+    );
   runApp(MultiBlocProvider(
     providers: [
       BlocProvider(create: (context) => UserAdditionBloc(
@@ -30,6 +32,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false, 
       home: Home(),
     );
   }

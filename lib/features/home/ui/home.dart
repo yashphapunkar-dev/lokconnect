@@ -69,7 +69,7 @@ class _HomeState extends State<Home> {
       },
       builder: (context, state) {
         return Scaffold(
-          backgroundColor: CustomColors.rosePink,
+          backgroundColor: CustomColors.oceanBlue,
           appBar: AppBar(
             leading: const SizedBox.shrink(),
             centerTitle: true,
@@ -78,10 +78,10 @@ class _HomeState extends State<Home> {
               style:
                   TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
             ),
-            backgroundColor: CustomColors.rosePink,
+            backgroundColor: CustomColors.oceanBlue,
           ),
           floatingActionButton: FloatingActionButton(
-            onPressed: () => homeBloc.add(NavigateToAddUser()),
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => UserAdditionScreen())),
             backgroundColor: Colors.grey.shade900,
             child: const Icon(Icons.add, color: Colors.white),
           ),
@@ -100,7 +100,7 @@ class _HomeState extends State<Home> {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: CustomInput(
                     textController: _searchController,
-                    hintText: 'Search users',
+                    hintText: 'Enter first name or plot number to search',
                     onChanged: _onSearchChanged,
                   ),
                 ),
@@ -120,8 +120,6 @@ class _HomeState extends State<Home> {
                         final hasMore = state is HomeSuccessState
                             ? state.hasMore
                             : (state as HomeMoreUsersLoadedState).hasMore;
-                        print("HAS MORE");
-                        print(hasMore);
                         return ListView.builder(
                           controller: _scrollController,
                           padding: const EdgeInsets.only(bottom: 80),
@@ -129,13 +127,7 @@ class _HomeState extends State<Home> {
                           itemBuilder: (context, index) {
                             if (index < users.length) {
                               return UserTile(user: users[index]);
-                            } else {
-                              return const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 20),
-                                child:
-                                    Center(child: CircularProgressIndicator()),
-                              );
-                            }
+                            } 
                           },
                         );
                       } else if (state is HomeErrorState) {

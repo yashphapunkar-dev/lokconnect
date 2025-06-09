@@ -11,7 +11,8 @@ class SubmitUserForm extends UserAdditionEvent {
   final String email;
   final String phoneNumber;
   final String plotNumber;
-  final Map<String, PlatformFile> documents;
+  final String membershipNumber;
+  final Map<String, dynamic> documents;
 
   SubmitUserForm({
     required this.firstName,
@@ -19,6 +20,7 @@ class SubmitUserForm extends UserAdditionEvent {
     required this.email,
     required this.phoneNumber,
     required this.plotNumber,
+    required this.membershipNumber,
     required this.documents,
   });
 

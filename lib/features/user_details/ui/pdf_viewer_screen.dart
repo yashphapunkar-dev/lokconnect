@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
-import 'package:url_launcher/url_launcher.dart';
+// import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
+// import 'package:url_launcher/url_launcher.dart';
 
 class PDFViewerScreen extends StatelessWidget {
   final String url;
@@ -10,9 +10,9 @@ class PDFViewerScreen extends StatelessWidget {
 
   Future<void> _openInNewTab() async {
     final Uri uri = Uri.parse(url);
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      throw 'Could not launch $url';
-    }
+    // if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+    //   throw 'Could not launch $url';
+    // }
   }
 
   @override
@@ -36,9 +36,9 @@ class PDFViewerScreen extends StatelessWidget {
     // On mobile or if it's an asset on web
     return Scaffold(
       appBar: AppBar(title: const Text("Document Viewer")),
-      body: isAsset
-          ? SfPdfViewer.asset(url)
-          : SfPdfViewer.network(url),
+      // body: isAsset
+          // ? SfPdfViewer.asset(url)
+          // : SfPdfViewer.network(url),
     );
   }
 }

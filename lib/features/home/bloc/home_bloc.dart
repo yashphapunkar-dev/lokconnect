@@ -76,11 +76,30 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
     emit(HomeLoadingState());
     try {
-      QuerySnapshot snapshot = await _firestore
+
+      QuerySnapshot snapshot;
+
+    // Try numeric search first for plot number or membership number
+    if (RegExp(r'^\d+$').hasMatch(event.query)) {
+      // You can decide which numeric field to search first or search both
+      snapshot = await _firestore
+          .collection('users')
+          .where('plotNumber', isEqualTo: event.query)
+          .get();
+  
+    } else {
+      snapshot = await _firestore
           .collection('users')
           .where('firstName', isGreaterThanOrEqualTo: event.query)
           .where('firstName', isLessThanOrEqualTo: '${event.query}\uf8ff')
           .get();
+    }
+    
+      // QuerySnapshot snapshot = await _firestore
+      //     .collection('users')
+      //     .where('firstName', isGreaterThanOrEqualTo: event.query)
+      //     .where('firstName', isLessThanOrEqualTo: '${event.query}\uf8ff')
+      //     .get();
 
       List<UserModel> users = snapshot.docs
           .map((doc) => UserModel.fromMap(doc.data() as Map<String, dynamic>))

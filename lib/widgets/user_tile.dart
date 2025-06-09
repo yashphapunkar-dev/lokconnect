@@ -6,28 +6,29 @@ import 'package:lokconnect/features/user_details/bloc/user_details_bloc.dart';
 import 'package:lokconnect/features/user_details/ui/user_details.dart';
 
 class UserTile extends StatelessWidget {
-  final  UserModel user;
+  final UserModel user;
   const UserTile({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-         Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (_) => BlocProvider(
-      create: (_) => UserDetailsBloc()..add(LoadUserDetailsEvent(user.userId!)),
-      child: UserDetailsScreen(userId: user.userId!),
-    ),
-  ),
-);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => BlocProvider(
+              create: (_) =>
+                  UserDetailsBloc()..add(LoadUserDetailsEvent(user.userId!)),
+              child: UserDetailsScreen(userId: user.userId!),
+            ),
+          ),
+        );
       },
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         margin: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
-            border: Border.all(width: 0.2, color: CustomColors.dustyRose),
+            border: Border.all(width: 0.2, color: CustomColors.oceanBlue),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.1),
@@ -36,7 +37,7 @@ class UserTile extends StatelessWidget {
                 offset: const Offset(3, 3),
               ),
             ],
-            color: Color(0xffFFC1CC).withOpacity(0.2),
+            color: Colors.white.withOpacity(0.5),
             borderRadius: BorderRadius.circular(15)),
         child: Row(
           children: [
@@ -50,7 +51,7 @@ class UserTile extends StatelessWidget {
                   child: Icon(
                     Icons.person_2_rounded,
                     size: 30,
-                    color: CustomColors.dustyRose,
+                    color: CustomColors.forestBrown,
                   ),
                 ),
                 SizedBox(
@@ -61,7 +62,8 @@ class UserTile extends StatelessWidget {
                   children: [
                     Text(
                       '${user.firstName} ${user.lastName}',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     Text(
                       'Plot no: ${user.plotNumber}',

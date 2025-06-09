@@ -6,15 +6,17 @@ class UserModel {
   final String phoneNumber;
   final String plotNumber;
   final String? userId;
+  final Map<String, dynamic>? documents; // <-- Optional documents list
 
   UserModel({
     required this.id,
     required this.firstName,
     required this.lastName,
     required this.phoneNumber,
-    required this.userId,
     required this.email,
     required this.plotNumber,
+    this.userId,
+    this.documents, // <-- Optional in constructor
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map, [String? userId]) {
@@ -26,6 +28,21 @@ class UserModel {
       lastName: map['lastName'] ?? '',
       email: map['email'] ?? '',
       plotNumber: map['plotNumber'] ?? '',
+      documents: map['documents'] != null
+          ? Map<String, dynamic>.from(map['documents'])
+          : null,
     );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'firstName': firstName,
+      'lastName': lastName,
+      'email': email,
+      'phoneNumber': phoneNumber,
+      'plotNumber': plotNumber,
+      'documents': documents,
+    };
   }
 }

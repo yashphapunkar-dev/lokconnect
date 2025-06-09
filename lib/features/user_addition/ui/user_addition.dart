@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
@@ -20,19 +21,46 @@ class _UserAdditionScreenState extends State<UserAdditionScreen> {
   String email = '';
   String phoneNumber = '';
   String plotNumber = '';
+  String membershipNumber = '';
 
-  final List<String> requiredDocs = [
-    "Lease Deed*",
-    "Nomination Form*",
-    "Member Application Form*",
-    "Other & Communication Documents*"
-  ];
+  void onPressAddDocument() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        String newDocName = '';
 
-  final List<String> optionalDocs = [
-    "Sale Purchase Documents",
-    "Legal Documents",
-    "Aadhar, Pan etc"
-  ];
+        return AlertDialog(
+          title: Text("Enter Document Name"),
+          content: TextField(
+            autofocus: true,
+            decoration: InputDecoration(hintText: "e.g. Driving License"),
+            onChanged: (value) {
+              newDocName = value;
+            },
+          ),
+          actions: [
+            TextButton(
+              child: Text("Cancel"),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            ElevatedButton(
+              child: Text("Add"),
+              onPressed: () {
+                if (newDocName.trim().isNotEmpty) {
+                  setState(() {
+                    customDocuments[newDocName.trim()] = null;
+                  });
+                }
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Map<String, dynamic> customDocuments = {};
 
   final Map<String, PlatformFile> selectedDocuments = {};
 
@@ -43,20 +71,19 @@ class _UserAdditionScreenState extends State<UserAdditionScreen> {
     if (result != null) {
       PlatformFile file = result.files.single;
       setState(() {
-        selectedDocuments[field] = file;
+        customDocuments[field] = file;
       });
     }
   }
 
   void _removeDocument(String field) {
     setState(() {
-      selectedDocuments.remove(field);
+      customDocuments.remove(field);
     });
   }
 
   void _submitForm() {
-    if (_formKey.currentState!.validate() &&
-        requiredDocs.every((doc) => selectedDocuments.containsKey(doc))) {
+    if (_formKey.currentState!.validate()) {
       BlocProvider.of<UserAdditionBloc>(context).add(
         SubmitUserForm(
           firstName: firstName,
@@ -64,7 +91,8 @@ class _UserAdditionScreenState extends State<UserAdditionScreen> {
           email: email,
           phoneNumber: phoneNumber,
           plotNumber: plotNumber,
-          documents: selectedDocuments,
+          membershipNumber: membershipNumber,
+          documents: customDocuments,
         ),
       );
     } else {
@@ -79,95 +107,255 @@ class _UserAdditionScreenState extends State<UserAdditionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: CustomColors.primaryColor,
+      bottomNavigationBar: Container(
+        color: CustomColors.primaryColor,
+        padding: EdgeInsets.only(top: 10),
+        child: CustomButton(buttonText: "Submit", onPress: _submitForm,),
+      ),
+      backgroundColor: CustomColors.oceanBlue,
       appBar: AppBar(
-        leading: IconButton(icon: Icon(Icons.arrow_back_ios), onPressed: () => Navigator.of(context).pop(),),
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back_ios,
+            color: Colors.white,
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: Text(
           "User Addition",
           style: CustomTextStyle.headingTextStyle,
         ),
-        backgroundColor: CustomColors.dustyRose,
+        backgroundColor: CustomColors.oceanBlue,
       ),
       body: BlocConsumer<UserAdditionBloc, UserAdditionState>(
         listener: (context, state) {
           if (!state.isLoading) {
             ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text("User added successfully!")));
-            Navigator.of(context).push(MaterialPageRoute(builder: (context) => Home()));    
+            Navigator.of(context)
+                .push(MaterialPageRoute(builder: (context) => Home()));
           }
         },
         builder: (context, state) {
-          return Stack(
-            children: [
-              SingleChildScrollView(
-                padding: EdgeInsets.all(16),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      CustomFormField(
-                        title: "First Name",
-                        onChanged: (val) => firstName = val,
-                      ),
+          return Container(
+            decoration: BoxDecoration(
+                color: CustomColors.primaryColor,
+                borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(40),
+                    topRight: Radius.circular(40))),
+            child: Stack(
+              children: [
+                SizedBox(
+                  height: MediaQuery.sizeOf(context).height,
+                  child: SingleChildScrollView(
+                      padding: EdgeInsets.all(16),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            LayoutBuilder(
+                              builder: (context, constraints) {
+                                final isWideScreen =
+                                    kIsWeb && constraints.maxWidth > 800;
 
-                      CustomFormField(
-                        title: "Last Name",
-                        onChanged: (val) => lastName = val,
-                      ),
+                                if (isWideScreen) {
+                                  return Expanded(
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        // Left side: Input Fields
+                                        Expanded(
+                                          flex: 1,
+                                          child: Column(
+                                            children: [
+                                              CustomFormField(
+                                                  title: "First Name",
+                                                  onChanged: (val) =>
+                                                      firstName = val),
+                                              CustomFormField(
+                                                  title: "Last Name",
+                                                  onChanged: (val) =>
+                                                      lastName = val),
+                                              CustomFormField(
+                                                  title: "Membership Number",
+                                                  onChanged: (val) =>
+                                                      membershipNumber = val),
+                                              CustomFormField(
+                                                  title: "Email",
+                                                  onChanged: (val) =>
+                                                      email = val),
+                                              CustomFormField(
+                                                  title: "Phone Number",
+                                                  onChanged: (val) =>
+                                                      phoneNumber = val),
+                                              CustomFormField(
+                                                  title: "Plot Number",
+                                                  onChanged: (val) =>
+                                                      plotNumber = val),
+                                            ],
+                                          ),
+                                        ),
 
-                      CustomFormField(
-                        title: "Email",
-                        onChanged: (val) => email = val,
-                      ),
+                                        const SizedBox(width: 40),
 
-                      CustomFormField(
-                        title: "Phone Number",
-                        onChanged: (val) => phoneNumber = val,
-                      ),
+                                        Expanded(
+                                          flex: 1,
+                                          child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              children: [
+                                                ...customDocuments.entries
+                                                    .map((entry) {
+                                                  String key = entry.key;
+                                                  // var value = entry.value;
+                                                  return Container(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        horizontal: 20,
+                                                        vertical: 10),
+                                                    margin:
+                                                        const EdgeInsets.only(
+                                                            top: 15),
+                                                    decoration: BoxDecoration(
+                                                      color: CustomColors
+                                                          .forestBrown
+                                                          .withOpacity(0.2),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              10),
+                                                    ),
+                                                    child: Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceBetween,
+                                                      children: [
+                                                        Row(
+                                                          children: [
+                                                            Text(key,
+                                                                style: CustomTextStyle
+                                                                    .documentTextStyle),
+                                                          ],
+                                                        ),
+                                                        customDocuments[key] !=
+                                                                null
+                                                            // true
+                                                            ? Row(
+                                                                children: [
+                                                                  SizedBox(
+                                                                    width: 100,
+                                                                    child: Text(
+                                                                      customDocuments[
+                                                                              key]!
+                                                                          .name,
+                                                                      style: CustomTextStyle
+                                                                          .documentTextStyle,
+                                                                      overflow:
+                                                                          TextOverflow
+                                                                              .ellipsis,
+                                                                    ),
+                                                                  ),
+                                                                  IconButton(
+                                                                    icon: const Icon(
+                                                                        Icons
+                                                                            .close),
+                                                                    onPressed: () =>
+                                                                        _removeDocument(
+                                                                            key),
+                                                                  ),
+                                                                ],
+                                                              )
+                                                            : IconButton(
+                                                                icon: const Icon(
+                                                                    Icons
+                                                                        .upload_file),
+                                                                onPressed: () =>
+                                                                    _pickDocument(
+                                                                        key),
+                                                              ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                }).toList(),
 
-                      CustomFormField(
-                        title: "Plot Number",
-                        onChanged: (val) => plotNumber = val,
-                      ),
-                      SizedBox(height: 20),
-                      ...[
-                        ...requiredDocs,
-                        ...optionalDocs
-                      ].map((doc) => Container(
-                            padding: EdgeInsets.symmetric(horizontal: 20),
-                            margin: EdgeInsets.only(top: 15),
-                            decoration: BoxDecoration(color: CustomColors.rosePink.withOpacity(0.3), borderRadius: BorderRadius.circular(10)),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(doc, style: CustomTextStyle.documentTextStyle,),
-                                selectedDocuments.containsKey(doc)
-                                    ? Row(
-                                        children: [
-                                          Text(selectedDocuments[doc]!.name, style: CustomTextStyle.documentTextStyle,),
-                                          IconButton(
-                                              icon: Icon(Icons.close),
-                                              onPressed: () =>
-                                                  _removeDocument(doc)),
-                                        ],
-                                      )
-                                    : IconButton(
-                                        icon: Icon(Icons.upload_file),
-                                        onPressed: () => _pickDocument(doc)),
-                              ],
+                                                InkWell(
+                                                  onTap: () {
+                                                    onPressAddDocument();
+                                                  },
+                                                  child: 
+                                                  Container(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        horizontal: 20,
+                                                        vertical: 10),
+                                                    margin:
+                                                        const EdgeInsets.only(
+                                                            top: 15),
+                                                    decoration: BoxDecoration(
+                                                      color: CustomColors
+                                                          .forestBrown
+                                                          .withOpacity(0.2),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              10),
+                                                    ),
+                                                    child: Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        Text("+ Add Document",
+                                                            style: CustomTextStyle
+                                                                .documentTextStyle),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),     
+                                              ]
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                } else {
+                                  // Mobile Layout: Everything in one Column
+                                  return Column(
+                                    children: [
+                                      CustomFormField(
+                                          title: "First Name",
+                                          onChanged: (val) => firstName = val),
+                                      CustomFormField(
+                                          title: "Last Name",
+                                          onChanged: (val) => lastName = val),
+                                      CustomFormField(
+                                          title: "Email",
+                                          onChanged: (val) => email = val),
+                                      CustomFormField(
+                                          title: "Phone Number",
+                                          onChanged: (val) =>
+                                              phoneNumber = val),
+                                      CustomFormField(
+                                          title: "Plot Number",
+                                          onChanged: (val) => plotNumber = val),
+                                      const SizedBox(height: 20),
+                                    ],
+                                  );
+                                }
+                              },
                             ),
-                          )),
-                      SizedBox(height: 20),
-                      CustomButton(
-                        onPress: _submitForm,
-                        buttonText: "Submit",
-                      )
-                    ],
-                  ),
+                            // const SizedBox(height: 20),
+                            // CustomButton(
+                            //   onPress: _submitForm,
+                            //   buttonText: "Submit",
+                            // ),
+                          ],
+                        ),
+                      )),
                 ),
-              ),
-              if (state.isLoading) Center(child: CircularProgressIndicator())
-            ],
+                if (state.isLoading) Center(child: CircularProgressIndicator())
+              ],
+            ),
           );
         },
       ),

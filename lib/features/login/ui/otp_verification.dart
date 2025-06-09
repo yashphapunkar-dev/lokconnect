@@ -1,6 +1,7 @@
 import 'package:another_flushbar/flushbar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:lokconnect/constants/custom_colors.dart';
 import 'package:lokconnect/features/home/ui/home.dart';
 import 'package:lokconnect/widgets/firebase_phone_login.dart';
@@ -62,9 +63,13 @@ class _OTPScreenState extends State<OTPScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              "Please enter OTP received on your phone number.",
-              style: CustomTextStyle.subHeadingTextStyle,
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                textAlign: TextAlign.center,
+                "Please enter OTP received on your phone number.",
+                style: CustomTextStyle.subHeadingTextStyle,
+              ),
             ),
             SizedBox(height: 20),
             Row(

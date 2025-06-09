@@ -67,17 +67,28 @@ class UserAdditionBloc extends Bloc<UserAdditionEvent, UserAdditionState> {
           .where("phoneNumber", isEqualTo: "+91${event.phoneNumber}")
           .get();
 
-      // for (var entry in event.documents.entries) {
-      //   String fileName = entry.value.name;
-      //   Uint8List? fileBytes = entry.value.bytes;
+      for (var entry in event.documents.entries) {
+        final String fieldName = entry.key;
+        final dynamic file = entry.value;
 
-      //   if (fileBytes != null) {
-      //     Reference ref = storage.ref().child("documents/$fileName");
-      //     await ref.putData(fileBytes);
-      //     String fileUrl = await ref.getDownloadURL();
-      //     documentUrls[entry.key] = fileUrl;
-      //   }
-      // }
+        if (file is PlatformFile && file.bytes != null) {
+          final String fileName = file.name;
+          final Uint8List fileBytes = file.bytes!;
+
+          final Reference ref = storage.ref().child("documents/$fileName");
+          await ref.putData(fileBytes);
+
+          final String downloadUrl = await ref.getDownloadURL();
+          documentUrls[fieldName] = downloadUrl;
+        }
+
+        // if (fileBytes != null) {
+        //   Reference ref = storage.ref().child("documents/$fileName");
+        //   await ref.putData(fileBytes);
+        //   String fileUrl = await ref.getDownloadURL();
+        //   documentUrls[entry.key] = fileUrl;
+        // }
+      }
 
       if (querySnapshot.docs.isNotEmpty) {
         DocumentReference existingUserDoc = querySnapshot.docs.first.reference;
@@ -86,6 +97,7 @@ class UserAdditionBloc extends Bloc<UserAdditionEvent, UserAdditionState> {
           "lastName": event.lastName,
           "email": event.email,
           "plotNumber": event.plotNumber,
+          "membershipNumber": event.membershipNumber,
           "documents": documentUrls,
           "updatedAt": FieldValue.serverTimestamp(),
         });
@@ -96,6 +108,7 @@ class UserAdditionBloc extends Bloc<UserAdditionEvent, UserAdditionState> {
           "email": event.email,
           "phoneNumber": event.phoneNumber,
           "plotNumber": event.plotNumber,
+          "membershipNumber": event.membershipNumber,
           "documents": documentUrls,
           "createdAt": FieldValue.serverTimestamp(),
         });
