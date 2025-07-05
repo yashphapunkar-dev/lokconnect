@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lokconnect/constants/custom_colors.dart';
 import 'package:lokconnect/features/home/ui/home.dart';
@@ -223,7 +224,6 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                       setState(() {
                         docsLoading = false;
                       });
-                    
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text("Upload failed: $e")),
@@ -298,289 +298,358 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
           } else if (state is UserDetailsLoaded) {
             return Stack(
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      decoration: const BoxDecoration(
-                        color: CustomColors.primaryColor,
-                        borderRadius:
-                            BorderRadius.only(topLeft: Radius.circular(40)),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          InfoTile(
-                            filedName: "First Name",
-                            textController: textFieldControllers['firstName'],
-                            value: "${state.user.firstName}",
+                LayoutBuilder(builder: (context, constraints) {
+                  final isWideScreen = kIsWeb && constraints.maxWidth > 800;
+                  if (isWideScreen) {
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          decoration: const BoxDecoration(
+                            color: CustomColors.primaryColor,
+                            borderRadius:
+                                BorderRadius.only(topLeft: Radius.circular(40)),
                           ),
-                          InfoTile(
-                            textController: textFieldControllers['lastName'],
-                            filedName: "Last Name",
-                            value: "${state.user.lastName}",
-                          ),
-                          InfoTile(
-                            textController: textFieldControllers['email'],
-                            value: state.user.email,
-                            filedName: "Email",
-                          ),
-                          InfoTile(
-                              textController:
-                                  textFieldControllers['phoneNumber'],
-                              value: "${state.user.phoneNumber}",
-                              filedName: "Phone Number"),
-                          InfoTile(
-                              textController:
-                                  textFieldControllers['plotNumber'],
-                              value: "${state.user.plotNumber}",
-                              filedName: "Plot Number"),
-                          InfoTile(
-                            textController:
-                                textFieldControllers['membershipNumber'],
-                            value: state.user.membershipNumber,
-                            filedName: "Membership Number",
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          color: CustomColors.primaryColor,
-                          borderRadius:
-                              BorderRadius.only(topRight: Radius.circular(40)),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(20.0),
-                          child: ListView(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                "Documents",
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
-                                ),
+                              InfoTile(
+                                filedName: "First Name",
+                                textController:
+                                    textFieldControllers['firstName'],
+                                value: "${state.user.firstName}",
                               ),
-                              const SizedBox(height: 20),
-
-                              StreamBuilder<Map<String, String>>(
-                                stream: getDocumentsStream(widget
-                                    .userId),
-                                builder: (context, snapshot) {
-                                  if (isLoading || !snapshot.hasData) {
-                                      return Center(child: CircularProgressIndicator());
-                                  }
-
-                                  final documents = snapshot.data!;
-                                  final docEntries = documents.entries.toList();
-
-                                  return GridView.builder(
-                                    itemCount: docEntries.length,
-                                    gridDelegate:
-                                        SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: widthHandler(
-                                              MediaQuery.sizeOf(context).width)
-                                          .toInt(),
-                                      crossAxisSpacing: 10,
-                                      mainAxisSpacing: 10,
-                                    ),
-                                    shrinkWrap: true,
-                                    itemBuilder: (context, index) {
-                                      final docName = docEntries[index].key;
-                                      final docUrl = docEntries[index].value;
-
-                                      return Card(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        elevation: 3,
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            color: Colors.white,
-                                          ),
-                                          padding: const EdgeInsets.all(12.0),
-                                          child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceAround,
-                                            children: [
-                                              IconButton(
-                                                icon: const Icon(
-                                                  Icons.picture_as_pdf,
-                                                  size: 50,
-                                                  color: Color(0xFFEF4444),
-                                                ),
-                                                onPressed: () {
-                                                  if (kIsWeb) {
-                                                    html.window
-                                                        .open(docUrl, '_blank');
-                                                  } else {
-                                                    Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                        builder: (_) =>
-                                                            PDFViewerScreen(
-                                                                url: docUrl),
-                                                      ),
-                                                    );
-                                                  }
-                                                },
-                                              ),
-                                              const SizedBox(height: 10),
-                                              Text(
-                                                docName,
-                                                style: CustomTextStyle
-                                                    .subHeadingTextStyle,
-                                              ),
-                                              TextButton.icon(
-                                                onPressed: () {
-                                                  onPressDeleteDoc(docName);
-                                                },
-                                                icon: const Icon(Icons.delete,
-                                                    color: Colors.red),
-                                                label: const Text("Delete",
-                                                    style: TextStyle(
-                                                        color: Colors.red)),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  );
-                               
-                               
-                                },
+                              InfoTile(
+                                textController:
+                                    textFieldControllers['lastName'],
+                                filedName: "Last Name",
+                                value: "${state.user.lastName}",
+                              ),
+                              InfoTile(
+                                textController: textFieldControllers['email'],
+                                value: state.user.email,
+                                filedName: "Email",
+                              ),
+                              InfoTile(
+                                  textController:
+                                      textFieldControllers['phoneNumber'],
+                                  value: "${state.user.phoneNumber}",
+                                  filedName: "Phone Number"),
+                              InfoTile(
+                                  textController:
+                                      textFieldControllers['plotNumber'],
+                                  value: "${state.user.plotNumber}",
+                                  filedName: "Plot Number"),
+                              InfoTile(
+                                textController:
+                                    textFieldControllers['membershipNumber'],
+                                value: state.user.membershipNumber,
+                                filedName: "Membership Number",
                               ),
                             ],
                           ),
                         ),
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: CustomColors.primaryColor,
+                              borderRadius: BorderRadius.only(
+                                  topRight: Radius.circular(40)),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: ListView(
+                                children: [
+                                  const Text(
+                                    "Documents",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  StreamBuilder<Map<String, String>>(
+                                    stream: getDocumentsStream(widget.userId),
+                                    builder: (context, snapshot) {
+                                      if (isLoading || !snapshot.hasData) {
+                                        return Center(
+                                            child: CircularProgressIndicator());
+                                      }
+
+                                      final documents = snapshot.data!;
+                                      final docEntries =
+                                          documents.entries.toList();
+
+                                      return GridView.builder(
+                                        itemCount: docEntries.length,
+                                        gridDelegate:
+                                            SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: widthHandler(
+                                                  MediaQuery.sizeOf(context)
+                                                      .width)
+                                              .toInt(),
+                                          crossAxisSpacing: 10,
+                                          mainAxisSpacing: 10,
+                                        ),
+                                        shrinkWrap: true,
+                                        itemBuilder: (context, index) {
+                                          final docName = docEntries[index].key;
+                                          final docUrl =
+                                              docEntries[index].value;
+
+                                          return Card(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            elevation: 3,
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                color: Colors.white,
+                                              ),
+                                              padding:
+                                                  const EdgeInsets.all(12.0),
+                                              child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceAround,
+                                                children: [
+                                                  IconButton(
+                                                    icon: const Icon(
+                                                      Icons.picture_as_pdf,
+                                                      size: 50,
+                                                      color: Color(0xFFEF4444),
+                                                    ),
+                                                    onPressed: () {
+                                                      if (kIsWeb) {
+                                                         Navigator.of(context).push(MaterialPageRoute(builder: ((context) =>  FirebasePdfViewer(downloadUrl: docUrl, key: Key('a'),) )));
+                                                        // FirebasePdfViewer(downloadUrl: docUrl, key: Key('a'),);
+                                                        
+                                                        // html.window.open(
+                                                        //     docUrl, '_blank');
+                                                      } else {
+                                                      
+                                                      }
+                                                    },
+                                                  ),
+                                                  const SizedBox(height: 10),
+                                                  Text(
+                                                    docName,
+                                                    style: CustomTextStyle
+                                                        .subHeadingTextStyle,
+                                                  ),
+                                                  TextButton.icon(
+                                                    onPressed: () {
+                                                      onPressDeleteDoc(docName);
+                                                    },
+                                                    icon: const Icon(
+                                                        Icons.delete,
+                                                        color: Colors.red),
+                                                    label: const Text("Delete",
+                                                        style: TextStyle(
+                                                            color: Colors.red)),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  } else {
+                    return SizedBox(
+                      height: MediaQuery.sizeOf(context).height,
+                      child: ListView(
+                        children: [
+                          Container(
+                            padding:  EdgeInsets.only(top: 30),
+                            decoration: const BoxDecoration(
+                              color: CustomColors.primaryColor,
+                              borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(40)),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                InfoTile(
+                                  filedName: "First Name",
+                                  textController:
+                                      textFieldControllers['firstName'],
+                                  value: "${state.user.firstName}",
+                                ),
+                                InfoTile(
+                                  textController:
+                                      textFieldControllers['lastName'],
+                                  filedName: "Last Name",
+                                  value: "${state.user.lastName}",
+                                ),
+                                InfoTile(
+                                  textController: textFieldControllers['email'],
+                                  value: state.user.email,
+                                  filedName: "Email",
+                                ),
+                                InfoTile(
+                                    textController:
+                                        textFieldControllers['phoneNumber'],
+                                    value: "${state.user.phoneNumber}",
+                                    filedName: "Phone Number"),
+                                InfoTile(
+                                    textController:
+                                        textFieldControllers['plotNumber'],
+                                    value: "${state.user.plotNumber}",
+                                    filedName: "Plot Number"),
+                                InfoTile(
+                                  textController:
+                                      textFieldControllers['membershipNumber'],
+                                  value: state.user.membershipNumber,
+                                  filedName: "Membership Number",
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            decoration: const BoxDecoration(
+                              color: CustomColors.primaryColor,
+                              borderRadius: BorderRadius.only(
+                                  topRight: Radius.circular(0)),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: Column(
+                                children: [
+                                  const Text(
+                                    "Documents",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  StreamBuilder<Map<String, String>>(
+                                    stream: getDocumentsStream(widget.userId),
+                                    builder: (context, snapshot) {
+                                      if (isLoading || !snapshot.hasData) {
+                                        return Center(
+                                            child: CircularProgressIndicator());
+                                      }
+
+                                      final documents = snapshot.data!;
+                                      final docEntries =
+                                          documents.entries.toList();
+
+                                      return GridView.builder(
+                                        itemCount: docEntries.length,
+                                        gridDelegate:
+                                            SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: widthHandler(
+                                                  MediaQuery.sizeOf(context)
+                                                      .width)
+                                              .toInt(),
+                                          crossAxisSpacing: 10,
+                                          mainAxisSpacing: 10,
+                                          childAspectRatio: 2.5,
+                                        ),
+                                        shrinkWrap: true,
+                                        itemBuilder: (context, index) {
+                                          final docName = docEntries[index].key;
+                                          final docUrl =
+                                              docEntries[index].value;
+
+                                          return Card(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            elevation: 3,
+                                            child: Container(
+                                              padding: EdgeInsets.only(
+                                                  top: 20, bottom: 20),
+                                              height: 60,
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                color: Colors.white,
+                                              ),
+                                              child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceAround,
+                                                children: [
+                                                  IconButton(
+                                                    icon: const Icon(
+                                                      Icons.picture_as_pdf,
+                                                      size: 50,
+                                                      color: Color(0xFFEF4444),
+                                                    ),
+                                                    onPressed: () {
+
+                                                      if (kIsWeb) {
+                                                        Navigator.of(context).push(MaterialPageRoute(builder: ((context) =>  FirebasePdfViewer(downloadUrl: docUrl, key: Key('a'),) )));
+                                                         
+                                                        // html.window.open(
+                                                        //     docUrl, '_blank');
+                                                      } else {
+                                                        // Navigator.push(
+                                                        //   context,
+                                                        //   MaterialPageRoute(
+                                                        //     builder: (_) =>
+                                                        //         PDFViewerScreen(
+                                                        //             url:
+                                                        //                 docUrl),
+                                                        //   ),
+                                                        // );
+                                                      }
+                                                    },
+                                                  ),
+                                                  const SizedBox(height: 10),
+                                                  Text(
+                                                    docName,
+                                                    style: CustomTextStyle
+                                                        .subHeadingTextStyle,
+                                                  ),
+                                                  TextButton.icon(
+                                                    onPressed: () {
+                                                      onPressDeleteDoc(docName);
+                                                    },
+                                                    icon: const Icon(
+                                                        Icons.delete,
+                                                        color: Colors.red),
+                                                    label: const Text("Delete",
+                                                        style: TextStyle(
+                                                            color: Colors.red)),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-
-                    // Expanded(
-                    //   child: Container(
-                    //     decoration: const BoxDecoration(
-                    //       color: CustomColors.primaryColor,
-                    //       borderRadius:
-                    //           BorderRadius.only(topRight: Radius.circular(40)),
-                    //     ),
-                    //     child: Padding(
-                    //       padding: const EdgeInsets.all(20.0),
-                    //       child: ListView(
-                    //         children: [
-                    //           const Text(
-                    //             "Documents",
-                    //             style: TextStyle(
-                    //               fontSize: 18,
-                    //               fontWeight: FontWeight.bold,
-                    //               color: Colors.black,
-                    //             ),
-                    //           ),
-                    //           const SizedBox(height: 20),
-                    //           GridView.builder(
-                    //             itemCount: state.user.documents!.length,
-                    //             gridDelegate:
-                    //                 SliverGridDelegateWithFixedCrossAxisCount(
-                    //               crossAxisCount: widthHandler(
-                    //                       MediaQuery.sizeOf(context).width)
-                    //                   .toInt(),
-                    //               crossAxisSpacing: 10,
-                    //               mainAxisSpacing: 10,
-                    //             ),
-                    //             shrinkWrap: true,
-                    //             itemBuilder: (context, index) {
-                    //               print("INDEX");
-                    //               final docEntries =
-                    //                   state.user.documents!.entries.toList();
-                    //               print(docEntries);
-
-                    //               final docName = docEntries[index].key;
-                    //               final docUrl = docEntries[index].value;
-
-                    //               print(docName);
-                    //               print(docUrl);
-
-                    //               return Card(
-                    //                 shape: RoundedRectangleBorder(
-                    //                     borderRadius:
-                    //                         BorderRadius.circular(12)),
-                    //                 elevation: 3,
-                    //                 child: Container(
-                    //                   decoration: BoxDecoration(
-                    //                     borderRadius: BorderRadius.circular(12),
-                    //                     color: Colors.white,
-                    //                   ),
-                    //                   padding: const EdgeInsets.all(12.0),
-                    //                   child: Column(
-                    //                     mainAxisAlignment:
-                    //                         MainAxisAlignment.spaceAround,
-                    //                     children: [
-                    //                       IconButton(
-                    //                         icon: const Icon(
-                    //                             Icons.picture_as_pdf,
-                    //                             size: 50,
-                    //                             color: Color(0xFFEF4444)),
-                    //                         onPressed: () {
-                    //                           final url = docUrl;
-                    //                           if (kIsWeb) {
-                    //                             html.window.open(url, '_blank');
-                    //                           } else {
-                    //                             Navigator.push(
-                    //                               context,
-                    //                               MaterialPageRoute(
-                    //                                 builder: (_) =>
-                    //                                     PDFViewerScreen(
-                    //                                         url: url),
-                    //                               ),
-                    //                             );
-                    //                           }
-                    //                         },
-                    //                       ),
-                    //                       const SizedBox(height: 10),
-                    //                       Text(
-                    //                         docName,
-                    //                         style: CustomTextStyle
-                    //                             .subHeadingTextStyle,
-                    //                       ),
-                    //                       TextButton.icon(
-                    //                         onPressed: () {
-                    //                           setState(() {
-                    //                             state.user.documents!
-                    //                                 .remove(docName);
-                    //                           });
-                    //                         },
-                    //                         icon: const Icon(Icons.delete,
-                    //                             color: Colors.red),
-                    //                         label: const Text("Delete",
-                    //                             style: TextStyle(
-                    //                                 color: Colors.red)),
-                    //                       )
-                    //                     ],
-                    //                   ),
-                    //                 ),
-                    //               );
-                    //             },
-                    //           ),
-                    //         ],
-                    //       ),
-                    //     ),
-                    //   ),
-                    // ),
-                  ],
-                ),
+                    );
+                  }
+                }),
                 docsLoading ? UploadingModal() : SizedBox.shrink(),
-
-                isLoading ?
-                     Center(
-                        child: CircularProgressIndicator(
-                            color: CustomColors.forestBrown))
-                    : SizedBox.shrink(),
               ],
             );
           } else if (state is UserDetailsError) {

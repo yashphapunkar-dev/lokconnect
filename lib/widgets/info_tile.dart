@@ -13,6 +13,12 @@ class InfoTile extends StatelessWidget {
   Widget build(BuildContext context) {
     textController!.text = value;
 
+     widthHandler(double width) {
+  if (width >= 1000) return 250; // Desktop
+  if (width >= 700) return 250;  // Tablet
+  return double.maxFinite;                    // Mobile
+}
+
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 40),
@@ -34,7 +40,7 @@ class InfoTile extends StatelessWidget {
 
           Container(
             child: SizedBox(
-              width: 250,
+              width: widthHandler(MediaQuery.sizeOf(context).width).toDouble(),
               child: TextField(
                 controller: textController,
                 

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 import 'package:lokconnect/features/home/models/user_model.dart';
 import 'package:meta/meta.dart';
 
@@ -14,8 +15,9 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   DocumentSnapshot? _lastDocument;
   bool _hasMore = true;
   final int _limit = 10;
+  final String role;
 
-  HomeBloc() : super(HomeInitial()) {
+  HomeBloc({required this.role}) : super(HomeInitial()) {
     on<HomeInitialEvent>(_onInitial);
     on<HomeLoadMoreUsersEvent>(_onLoadMore);
     on<SearchUsersEvent>(_onSearch);
@@ -41,6 +43,11 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     try {
       Query query =
           _firestore.collection('users').orderBy("firstName").limit(_limit);
+
+      if (role != 'superadmin') {
+        query = query.where("aprooved", isEqualTo: true);
+      }
+
       if (_lastDocument != null) {
         query = query.startAfterDocument(_lastDocument!);
       }
@@ -57,12 +64,15 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       } else {
         _hasMore = false;
       }
+
       if (snapshot.docs.length < _limit) {
         _hasMore = false;
       }
 
       return FetchUsersResult(users: _users, hasMore: _hasMore);
     } catch (e) {
+      print("ERROR");
+      print(e);
       return null;
     }
   }
@@ -76,33 +86,25 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
     emit(HomeLoadingState());
     try {
+      Query query = _firestore.collection('users');
 
-      QuerySnapshot snapshot;
+      // Check if numeric query
+      if (RegExp(r'^\d+$').hasMatch(event.query)) {
+        query = query.where('plotNumber', isEqualTo: event.query);
+      } else {
+        query = query
+            .where('firstName', isGreaterThanOrEqualTo: event.query)
+            .where('firstName', isLessThanOrEqualTo: '${event.query}\uf8ff');
+      }
 
-    // Try numeric search first for plot number or membership number
-    if (RegExp(r'^\d+$').hasMatch(event.query)) {
-      // You can decide which numeric field to search first or search both
-      snapshot = await _firestore
-          .collection('users')
-          .where('plotNumber', isEqualTo: event.query)
-          .get();
-  
-    } else {
-      snapshot = await _firestore
-          .collection('users')
-          .where('firstName', isGreaterThanOrEqualTo: event.query)
-          .where('firstName', isLessThanOrEqualTo: '${event.query}\uf8ff')
-          .get();
-    }
-    
-      // QuerySnapshot snapshot = await _firestore
-      //     .collection('users')
-      //     .where('firstName', isGreaterThanOrEqualTo: event.query)
-      //     .where('firstName', isLessThanOrEqualTo: '${event.query}\uf8ff')
-      //     .get();
+      if (role != 'superadmin') {
+        query = query.where("aprooved", isEqualTo: true);
+      }
+
+      QuerySnapshot snapshot = await query.get();
 
       List<UserModel> users = snapshot.docs
-          .map((doc) => UserModel.fromMap(doc.data() as Map<String, dynamic>))
+          .map((doc) => UserModel.fromMap(doc.data() as Map<String, dynamic>, doc.id))
           .toList();
 
       emit(HomeSuccessState(users: users, hasMore: false));

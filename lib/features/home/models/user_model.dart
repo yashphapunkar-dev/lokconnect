@@ -8,6 +8,7 @@ class UserModel {
   final String membershipNumber;
   final String? userId;
   final Map<String, dynamic>? documents; // <-- Optional documents list
+  bool aprooved;
 
   UserModel({
     required this.id,
@@ -18,6 +19,7 @@ class UserModel {
     required this.plotNumber,
     required this.membershipNumber,
     this.userId,
+    this.aprooved = false,
     this.documents, // <-- Optional in constructor
   });
 
@@ -34,6 +36,7 @@ class UserModel {
       documents: map['documents'] != null
           ? Map<String, dynamic>.from(map['documents'])
           : null,
+      aprooved: map['aprooved'] ?? false    
     );
   }
 

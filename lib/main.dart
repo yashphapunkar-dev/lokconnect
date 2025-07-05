@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import "package:flutter/material.dart";
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lokconnect/features/admin_user_service.dart';
+import 'package:lokconnect/features/home/bloc/home_bloc.dart';
 import 'package:lokconnect/features/home/ui/home.dart';
 import "package:lokconnect/features/splashscreen/splashscreen.dart";
 import 'package:firebase_core/firebase_core.dart';
@@ -20,7 +22,15 @@ void main() async {
       BlocProvider(create: (context) => UserAdditionBloc(
           storage: FirebaseStorage.instance,
           firestore: FirebaseFirestore.instance,
-        )),
+     )),
+
+      BlocProvider(create: (context) => HomeBloc(
+          role: context.read<AdminUserService>().role!.trim(),
+     )),
+
+      ChangeNotifierProvider(
+          create: (_) => AdminUserService(),
+        ),
     ],
     child: MyApp(),
   ));

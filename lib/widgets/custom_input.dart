@@ -6,14 +6,18 @@ class CustomInput extends StatelessWidget {
   final TextEditingController textController;
   final Function(String?)? onSubmit;
   final Function(String)? onChanged;
+  final bool isSecure;
+  final Widget? suffixIcon; // New: Optional suffix icon
 
-  CustomInput({
+  const CustomInput({ // Changed to const constructor where possible for performance
     super.key,
     this.hintText = ' ',
     required this.textController,
     this.title = '',
     this.onSubmit,
     this.onChanged,
+    this.isSecure = false,
+    this.suffixIcon, // Initialize the new property
   });
 
   double widthHandler(double width) {
@@ -24,7 +28,7 @@ class CustomInput extends StatelessWidget {
     } else if (width >= 1280) {
       return 500;
     }
-    return 0;
+    return 0; // Default return for safety, though conditions cover all ranges
   }
 
   @override
@@ -51,6 +55,7 @@ class CustomInput extends StatelessWidget {
             controller: textController,
             onChanged: onChanged,
             onSubmitted: onSubmit,
+            obscureText: isSecure,
             decoration: InputDecoration(
               hintMaxLines: 1,
               focusedBorder: OutlineInputBorder(
@@ -72,6 +77,7 @@ class CustomInput extends StatelessWidget {
                 vertical: 15,
                 horizontal: 15,
               ),
+              suffixIcon: suffixIcon, // New: Assign the optional suffixIcon here
             ),
           ),
         ),

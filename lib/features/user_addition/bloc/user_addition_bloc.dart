@@ -33,7 +33,7 @@ class UserAdditionBloc extends Bloc<UserAdditionEvent, UserAdditionState> {
       }
 
       Reference ref = storage.ref().child("documents/$fileName");
-      await ref.putData(fileBytes);
+      await ref.putData(fileBytes, );
 
       emit(state.copyWith(
         uploadedDocuments: {
@@ -76,18 +76,16 @@ class UserAdditionBloc extends Bloc<UserAdditionEvent, UserAdditionState> {
           final Uint8List fileBytes = file.bytes!;
 
           final Reference ref = storage.ref().child("documents/$fileName");
-          await ref.putData(fileBytes);
+          await ref.putData(fileBytes,
+           SettableMetadata(
+            contentType: 'application/pdf',
+            contentDisposition: 'inline', 
+          ),
+          );
 
           final String downloadUrl = await ref.getDownloadURL();
           documentUrls[fieldName] = downloadUrl;
         }
-
-        // if (fileBytes != null) {
-        //   Reference ref = storage.ref().child("documents/$fileName");
-        //   await ref.putData(fileBytes);
-        //   String fileUrl = await ref.getDownloadURL();
-        //   documentUrls[entry.key] = fileUrl;
-        // }
       }
 
       if (querySnapshot.docs.isNotEmpty) {
@@ -99,6 +97,8 @@ class UserAdditionBloc extends Bloc<UserAdditionEvent, UserAdditionState> {
           "plotNumber": event.plotNumber,
           "membershipNumber": event.membershipNumber,
           "documents": documentUrls,
+          "verified": false,
+          "aprooved": false,
           "updatedAt": FieldValue.serverTimestamp(),
         });
       } else {
@@ -110,19 +110,10 @@ class UserAdditionBloc extends Bloc<UserAdditionEvent, UserAdditionState> {
           "plotNumber": event.plotNumber,
           "membershipNumber": event.membershipNumber,
           "documents": documentUrls,
+          "aprooved": false,
           "createdAt": FieldValue.serverTimestamp(),
         });
       }
-
-      // await firestore.collection("users").add({
-      //   "firstName": event.firstName,
-      //   "lastName": event.lastName,
-      //   "email": event.email,
-      //   "phoneNumber": event.phoneNumber,
-      //   "plotNumber": event.plotNumber,
-      //   "documents": documentUrls,
-      //   "createdAt": FieldValue.serverTimestamp(),
-      // });
 
       emit(UserAdditionState());
     } catch (e) {
