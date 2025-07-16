@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lokconnect/constants/custom_colors.dart';
 import 'package:lokconnect/features/admin_user_service.dart';
+import 'package:lokconnect/features/home/bloc/home_bloc.dart';
 import 'package:lokconnect/features/home/models/user_model.dart';
 import 'package:lokconnect/features/user_details/bloc/user_details_bloc.dart';
 import 'package:lokconnect/features/user_details/ui/user_details.dart';
@@ -11,17 +12,55 @@ class UserTile extends StatefulWidget {
 
   final UserModel user;
   final onPressUserAproove;
-  const UserTile({super.key, required this.user, required this.onPressUserAproove});
+  final Function(String) onDeleteUser;
+  const UserTile({super.key, required this.user, required this.onPressUserAproove, 
+  required this.onDeleteUser,
+  });
 
   @override
   State<UserTile> createState() => _UserTileState();
 }
 
 class _UserTileState extends State<UserTile> {
+   
+
+
 
   @override
   Widget build(BuildContext context) {
       String? role = Provider.of<AdminUserService>(context, listen: false).role;
+
+ Future<void> _showDeleteConfirmationDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // User must tap a button to close
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Deletion'),
+          content: Text(
+            'Are you sure you want to delete ${widget.user.firstName} ${widget.user.lastName}?',
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Dismiss dialog
+              },
+            ),
+            TextButton(
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+              onPressed: () {
+                print("USER TILE ");
+                widget.onDeleteUser(widget.user.userId!);
+                Navigator.of(context).pop(); // Dismiss dialog
+             
+          
+              },
+            ),
+          ],
+        );
+      });
+ }
 
     return InkWell(
       
@@ -102,15 +141,36 @@ class _UserTileState extends State<UserTile> {
               onTap: () {
                 widget.onPressUserAproove();
               },
-                  child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                    decoration: BoxDecoration(
-                      color: widget.user.aprooved == true  ? Colors.green : Colors.red,
-                      borderRadius: BorderRadius.circular(40)
+                  child: Row(
+                    children: [
+
+                      Container(
+                        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                        decoration: BoxDecoration(
+                          color: widget.user.aprooved == true  ? Colors.green : Colors.red,
+                          borderRadius: BorderRadius.circular(40)
+                        ),  
+                        child: Text( widget.user.aprooved == true ? "Verified" : "Aproove", style: TextStyle(color: Colors.white, fontSize: 14),)
+                        ),
+
+                        SizedBox(width: 5,),
+
+                       InkWell(
+                    onTap: _showDeleteConfirmationDialog, // Call confirmation dialog
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(40),
+                      ),
+                      child: const Text(
+                        "Delete",
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
                     ),
-              
-                    child: Text( widget.user.aprooved == true ? "Verified" : "Aproove", style: TextStyle(color: Colors.white, fontSize: 14),)
-                    ),
+                  ),
+                    ],
+                  ),
                 ) 
                 else SizedBox.shrink(),
                 

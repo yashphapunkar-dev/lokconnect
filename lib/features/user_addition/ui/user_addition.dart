@@ -15,13 +15,6 @@ class CustomTextStyle {
    static const TextStyle documentTextStyle = TextStyle(fontWeight: FontWeight.w600, color: Colors.black, fontSize: 14);
 }
 
-// Assuming CustomColors is defined as:
-// class CustomColors {
-//   static const Color primaryColor = Color(0xFFF1EFE7);
-//   static const Color oceanBlue = Color(0xFF0A1931);
-//   static const Color forestBrown = Color(0xFF4B3832);
-// }
-
 
 class UserAdditionScreen extends StatefulWidget {
   @override
@@ -107,11 +100,20 @@ class _UserAdditionScreenState extends State<UserAdditionScreen> {
     }
   }
 
-  void _removeDocument(String field) {
+  // MODIFIED: This function now only removes the file from the field.
+  void _clearDocument(String field) {
+    setState(() {
+      customDocuments[field] = null;
+    });
+  }
+
+  // NEW: This function removes the entire document field (key-value pair).
+  void _deleteDocumentField(String field) {
     setState(() {
       customDocuments.remove(field);
     });
   }
+
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
@@ -198,7 +200,6 @@ class _UserAdditionScreenState extends State<UserAdditionScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      // Left side: Input Fields
                                       Expanded(
                                         flex: 1,
                                         child: Column(
@@ -222,20 +223,12 @@ class _UserAdditionScreenState extends State<UserAdditionScreen> {
                                                 title: "Email",
                                                 onChanged: (val) =>
                                                     email = val,
-                                                validator: (val) {
-                                                  if (val == null || val.isEmpty) return "Email is required";
-                                                  if (!val.contains('@')) return "Enter a valid email";
-                                                  return null;
-                                                }),
+                                                ),
                                             CustomFormField(
                                                 title: "Phone Number",
                                                 onChanged: (val) =>
                                                     phoneNumber = val,
-                                                validator: (val) {
-                                                  if (val == null || val.isEmpty) return "Phone Number is required";
-                                                  if (val.length < 10) return "Enter a 10-digit phone number";
-                                                  return null;
-                                                }),
+                                                ),
                                             CustomFormField(
                                                 title: "Plot Number",
                                                 onChanged: (val) =>
@@ -244,9 +237,7 @@ class _UserAdditionScreenState extends State<UserAdditionScreen> {
                                           ],
                                         ),
                                       ),
-
                                       const SizedBox(width: 40),
-
                                       Expanded(
                                         flex: 1,
                                         child: Column(
@@ -256,6 +247,10 @@ class _UserAdditionScreenState extends State<UserAdditionScreen> {
                                               ...customDocuments.entries
                                                   .map((entry) {
                                                 String key = entry.key;
+                                                // Check if the current field is one of the initial, non-deletable fields
+                                                final isDeletable = !initialDocumentNames.contains(key);
+                                                final isFileSelected = customDocuments[key] != null;
+
                                                 return Container(
                                                   padding: const EdgeInsets
                                                       .symmetric(
@@ -279,48 +274,45 @@ class _UserAdditionScreenState extends State<UserAdditionScreen> {
                                                       Text(key,
                                                           style: CustomTextStyle
                                                               .documentTextStyle),
-                                                      customDocuments[key] !=
-                                                              null
-                                                          ? Row(
-                                                              children: [
-                                                                SizedBox(
-                                                                  width: 100,
-                                                                  child: Text(
-                                                                    customDocuments[
-                                                                            key]!
-                                                                        .name,
-                                                                    style: CustomTextStyle
-                                                                        .documentTextStyle,
-                                                                    overflow:
-                                                                        TextOverflow
-                                                                            .ellipsis,
-                                                                  ),
-                                                                ),
-                                                                IconButton(
-                                                                  icon: const Icon(
-                                                                      Icons
-                                                                          .close),
-                                                                  onPressed: () =>
-                                                                      _removeDocument(
-                                                                          key),
-                                                                ),
-                                                              ],
-                                                            )
-                                                          : IconButton(
-                                                              icon: const Icon(Icons
-                                                                  .upload_file),
-                                                              onPressed: () =>
-                                                                  _pickDocument(
-                                                                      key),
+                                                      Row(
+                                                        children: [
+                                                          if (isFileSelected)
+                                                          SizedBox(
+                                                            width: 100,
+                                                            child: Text(
+                                                              customDocuments[key]!.name,
+                                                              style: CustomTextStyle.documentTextStyle,
+                                                              overflow: TextOverflow.ellipsis,
                                                             ),
+                                                          ),
+                                                          if (isFileSelected)
+                                                            IconButton(
+                                                              icon: const Icon(
+                                                                  Icons.close),
+                                                              onPressed: () =>
+                                                                  _clearDocument(key), // Clears the file only
+                                                            ),
+                                                          if (!isFileSelected)
+                                                            IconButton(
+                                                              icon: const Icon(Icons.upload_file),
+                                                              onPressed: () =>
+                                                                  _pickDocument(key),
+                                                            ),
+                                                          
+                                                          // NEW: Show the delete icon only for user-added fields
+                                                          if (isDeletable)
+                                                            IconButton(
+                                                              icon: const Icon(Icons.delete, color: Colors.red),
+                                                              onPressed: () => _deleteDocumentField(key), // Deletes the entire field
+                                                            ),
+                                                        ],
+                                                      ),
                                                     ],
                                                   ),
                                                 );
                                               }).toList(),
                                               InkWell(
-                                                onTap: () {
-                                                  onPressAddDocument();
-                                                },
+                                                onTap: onPressAddDocument,
                                                 child: Container(
                                                   padding: const EdgeInsets
                                                       .symmetric(
@@ -392,16 +384,14 @@ class _UserAdditionScreenState extends State<UserAdditionScreen> {
                                           validator: (val) => val!.isEmpty ? "Membership Number is required" : null,),
                                       const SizedBox(height: 20),
 
-                                      // Corrected Mobile Document Layout:
-                                      // Removed the problematic SizedBox with height wrapping ListView.
-                                      // The Column below will now directly contain the document items
-                                      // and will scroll along with the parent SingleChildScrollView.
-                                      Column( // This Column now correctly wraps the document UI elements
+                                      Column(
                                           crossAxisAlignment: CrossAxisAlignment.stretch,
                                           children: [
                                             ...customDocuments.entries
                                                 .map((entry) {
                                                 String key = entry.key;
+                                                final isDeletable = !initialDocumentNames.contains(key);
+                                                final isFileSelected = customDocuments[key] != null;
                                                 return Container(
                                                   padding:
                                                       const EdgeInsets.symmetric(
@@ -418,45 +408,47 @@ class _UserAdditionScreenState extends State<UserAdditionScreen> {
                                                   ),
                                                   child: Row(
                                                     mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceBetween,
+                                                        MainAxisAlignment.spaceBetween,
                                                     children: [
                                                       Text(key,
                                                           style: CustomTextStyle
                                                               .documentTextStyle),
-                                                      customDocuments[key] != null
-                                                          ? Row(
-                                                              children: [
-                                                                SizedBox(
-                                                                  width: 100,
-                                                                  child: Text(
-                                                                    customDocuments[
-                                                                            key]!
-                                                                        .name,
-                                                                    style: CustomTextStyle
-                                                                        .documentTextStyle,
-                                                                    overflow:
-                                                                        TextOverflow
-                                                                            .ellipsis,
-                                                                  ),
-                                                                ),
-                                                                IconButton(
-                                                                  icon: const Icon(
-                                                                      Icons
-                                                                          .close),
-                                                                  onPressed: () =>
-                                                                      _removeDocument(
-                                                                          key),
-                                                                ),
-                                                              ],
-                                                            )
-                                                          : IconButton(
-                                                              icon: const Icon(Icons
-                                                                  .upload_file),
-                                                              onPressed: () =>
-                                                                  _pickDocument(
-                                                                      key),
+                                                      Row(
+                                                        children: [
+                                                          if (isFileSelected)
+                                                          SizedBox(
+                                                            width: 100,
+                                                            child: Text(
+                                                              customDocuments[
+                                                                      key]!
+                                                                  .name,
+                                                              style: CustomTextStyle
+                                                                  .documentTextStyle,
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
                                                             ),
+                                                          ),
+                                                          if (isFileSelected)
+                                                            IconButton(
+                                                              icon: const Icon(
+                                                                  Icons.close),
+                                                              onPressed: () =>
+                                                                  _clearDocument(key),
+                                                            ),
+                                                          if (!isFileSelected)
+                                                            IconButton(
+                                                              icon: const Icon(Icons.upload_file),
+                                                              onPressed: () =>
+                                                                  _pickDocument(key),
+                                                            ),
+                                                          if (isDeletable)
+                                                            IconButton(
+                                                              icon: const Icon(Icons.delete, color: Colors.red),
+                                                              onPressed: () => _deleteDocumentField(key),
+                                                            ),
+                                                        ],
+                                                      ),
                                                     ],
                                                   ),
                                                 );
@@ -490,10 +482,10 @@ class _UserAdditionScreenState extends State<UserAdditionScreen> {
                                                   ),
                                                 ),
                                               ),
-                                            ], // End of children for Column
-                                          ), // End of Column for mobile documents
-                                    ], // End of children for mobile main Column
-                                  ); // End of mobile main Column
+                                            ],
+                                          ),
+                                    ],
+                                  );
                                 }
                               },
                             ),

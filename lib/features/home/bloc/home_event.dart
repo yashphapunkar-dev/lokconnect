@@ -11,3 +11,12 @@ class SearchUsersEvent extends HomeEvent {
 }
 class HomeLoadMoreUsersEvent extends HomeEvent {}
 class NavigateToAddUser extends HomeEvent {}
+
+class HomeDeleteUserEvent extends HomeEvent {
+  final String userId;
+
+  HomeDeleteUserEvent({required this.userId});
+
+  @override
+  List<Object?> get props => [userId];
+}

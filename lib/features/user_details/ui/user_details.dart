@@ -2,7 +2,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lokconnect/constants/custom_colors.dart';
 import 'package:lokconnect/features/home/ui/home.dart';
@@ -10,8 +9,6 @@ import 'package:lokconnect/features/user_details/bloc/user_details_bloc.dart';
 import 'package:lokconnect/features/user_details/ui/pdf_viewer_screen.dart';
 import 'package:lokconnect/widgets/info_tile.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:html' as html;
-
 import 'package:lokconnect/widgets/uploading_model.dart';
 
 class UserDetailsScreen extends StatefulWidget {
@@ -51,6 +48,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
 
     FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
       'documents.$docName': FieldValue.delete(),
+      'aprooved': false,
     }).then((_) {
       setState(() {
         docsLoading = false;
@@ -82,7 +80,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
 
   Future<void> updateUserProfileAndDocuments({
     required Map<String, TextEditingController> textFieldControllers,
-    required Map<String, dynamic>? updatedDocuments,
+    // required Map<String, dynamic>? updatedDocuments,
     required BuildContext context,
     required String userId,
     required VoidCallback onSuccessNavigate,
@@ -99,7 +97,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
         "plotNumber": textFieldControllers["plotNumber"]?.text.trim(),
         "membershipNumber":
             textFieldControllers["membershipNumber"]?.text.trim(),
-        "documents": updatedDocuments,
+        "aprooved": false,    
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -206,7 +204,13 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                       final ref = FirebaseStorage.instance
                           .ref()
                           .child('documents/$selectedFileName');
-                      await ref.putData(selectedFileBytes!);
+                      await ref.putData(
+                        selectedFileBytes!,
+                        SettableMetadata(
+                          contentType: 'application/pdf',
+                          contentDisposition: 'inline',
+                        ),
+                      );
                       final downloadUrl = await ref.getDownloadURL();
 
                       final userDoc = FirebaseFirestore.instance
@@ -219,7 +223,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
 
                       existingDocuments[name] = downloadUrl;
 
-                      await userDoc.update({"documents": existingDocuments});
+                      await userDoc.update({"documents": existingDocuments, 'aprooved': false});
 
                       setState(() {
                         docsLoading = false;
@@ -268,7 +272,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
               if (state is UserDetailsLoaded) {
                 updateUserProfileAndDocuments(
                   textFieldControllers: textFieldControllers,
-                  updatedDocuments: state.user.documents,
+                  // updatedDocuments: state.user.documents,
                   context: context,
                   userId: widget.userId,
                   onSuccessNavigate: () {
@@ -426,14 +430,21 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                                                     ),
                                                     onPressed: () {
                                                       if (kIsWeb) {
-                                                         Navigator.of(context).push(MaterialPageRoute(builder: ((context) =>  FirebasePdfViewer(downloadUrl: docUrl, key: Key('a'),) )));
+                                                        Navigator.of(context).push(
+                                                            MaterialPageRoute(
+                                                                builder:
+                                                                    ((context) =>
+                                                                        FirebasePdfViewer(
+                                                                          downloadUrl:
+                                                                              docUrl,
+                                                                          key: Key(
+                                                                              'a'),
+                                                                        ))));
                                                         // FirebasePdfViewer(downloadUrl: docUrl, key: Key('a'),);
-                                                        
+
                                                         // html.window.open(
                                                         //     docUrl, '_blank');
-                                                      } else {
-                                                      
-                                                      }
+                                                      } else {}
                                                     },
                                                   ),
                                                   const SizedBox(height: 10),
@@ -474,7 +485,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                       child: ListView(
                         children: [
                           Container(
-                            padding:  EdgeInsets.only(top: 30),
+                            padding: EdgeInsets.only(top: 30),
                             decoration: const BoxDecoration(
                               color: CustomColors.primaryColor,
                               borderRadius: BorderRadius.only(
@@ -596,10 +607,18 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                                                       color: Color(0xFFEF4444),
                                                     ),
                                                     onPressed: () {
-
                                                       if (kIsWeb) {
-                                                        Navigator.of(context).push(MaterialPageRoute(builder: ((context) =>  FirebasePdfViewer(downloadUrl: docUrl, key: Key('a'),) )));
-                                                         
+                                                        Navigator.of(context).push(
+                                                            MaterialPageRoute(
+                                                                builder:
+                                                                    ((context) =>
+                                                                        FirebasePdfViewer(
+                                                                          downloadUrl:
+                                                                              docUrl,
+                                                                          key: Key(
+                                                                              'a'),
+                                                                        ))));
+
                                                         // html.window.open(
                                                         //     docUrl, '_blank');
                                                       } else {
