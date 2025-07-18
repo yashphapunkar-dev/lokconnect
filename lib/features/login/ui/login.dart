@@ -27,7 +27,7 @@ class _LoginState extends State<Login> {
   final TextEditingController _passwordController = TextEditingController();
 
   bool _isLoading = false;
-  bool _isPasswordVisible = false; // New state variable for password visibility
+  bool _isPasswordVisible = false;
 
   @override
   void dispose() {
@@ -40,7 +40,6 @@ class _LoginState extends State<Login> {
   void _handleLogin() {
     String phoneNumber = _phoneController.text.trim();
 
-    // ✅ Validate phone number format
     if (phoneNumber.isEmpty) {
       showCustomAlert(
         context: context,
@@ -87,10 +86,10 @@ class _LoginState extends State<Login> {
         password: password,
       );
 
-      // Load admin data only after successful login
-      await Provider.of<AdminUserService>(context, listen: false).loadAdminData();
+      await Provider.of<AdminUserService>(context, listen: false)
+          .loadAdminData();
 
-      if (mounted) { // Check if the widget is still mounted before setState and navigation
+      if (mounted) {
         setState(() {
           _isLoading = false;
         });
@@ -112,100 +111,6 @@ class _LoginState extends State<Login> {
     }
   }
 
-  // Function for password reset
-  void _showForgotPasswordDialog() {
-    TextEditingController resetEmailController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text("Reset Password"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text("Enter your email to receive a password reset link."),
-              const SizedBox(height: 16),
-              TextField(
-                controller: resetEmailController,
-                decoration: const InputDecoration(
-                  labelText: "Email",
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.emailAddress,
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text("Cancel"),
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                resetEmailController.dispose();
-              },
-            ),
-            ElevatedButton(
-              child: const Text("Send Reset Email"),
-              onPressed: () async {
-                String email = resetEmailController.text.trim();
-                if (email.isEmpty) {
-                  showCustomAlert(
-                    context: dialogContext,
-                    title: "Error",
-                    message: "Please enter your email.",
-                  );
-                  return;
-                }
-
-                Navigator.of(dialogContext).pop(); // Close the email input dialog
-                resetEmailController.dispose();
-
-                setState(() {
-                  _isLoading = true;
-                });
-
-                try {
-                  await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-                  if (mounted) {
-                    setState(() {
-                      _isLoading = false;
-                    });
-                    showCustomAlert(
-                      context: context,
-                      title: "Password Reset",
-                      message: "A password reset link has been sent to your email. Please check your inbox.",
-                    );
-                  }
-                } on FirebaseAuthException catch (e) {
-                  if (mounted) {
-                    setState(() {
-                      _isLoading = false;
-                    });
-                    showCustomAlert(
-                      context: context,
-                      title: "Error",
-                      message: e.message ?? "Failed to send reset email.",
-                    );
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    setState(() {
-                      _isLoading = false;
-                    });
-                    showCustomAlert(
-                      context: context,
-                      title: "Error",
-                      message: "An unexpected error occurred.",
-                    );
-                  }
-                }
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<LoginBloc, LoginState>(
@@ -218,7 +123,10 @@ class _LoginState extends State<Login> {
             _isLoading = false;
           });
           Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => OTPScreen(verificationId: state.verificationId),
+            builder: (context) => OTPScreen(
+              verificationId: state.verificationId,
+              phoneNumber: state.phoneNumber,
+            ),
           ));
         } else if (state is OTPErrorState) {
           setState(() {
@@ -237,23 +145,17 @@ class _LoginState extends State<Login> {
             height: 200,
             color: mainColor,
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator()) // Show loader while logging in
+                ? const Center(
+                    child:
+                        CircularProgressIndicator()) // Show loader while logging in
                 : Column(
-                  children: [
-
-                    CustomButton(
+                    children: [
+                      CustomButton(
                         onPress: kIsWeb ? _handleEmailLogin : _handleLogin,
                         buttonText: "Login",
                       ),
-                      TextButton(
-                        onPressed: _showForgotPasswordDialog,
-                        child: const Text(
-                          "Forgot Password?",
-                          style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                  ],
-                ),
+                    ],
+                  ),
           ),
           body: Stack(
             children: [
@@ -269,14 +171,11 @@ class _LoginState extends State<Login> {
                           'assets/animationlogo.json',
                           fit: BoxFit.cover,
                           repeat: true,
-                          height: kIsWeb ? 200 : 300,
                         ),
                         Padding(
                           padding: const EdgeInsets.only(bottom: 30),
                           child: Image(
                             image: const AssetImage('assets/logo_large.png'),
-                            height: kIsWeb ? 100 : 300,
-                            width: kIsWeb ? 400 : 300,
                           ),
                         ),
                         Container(
@@ -296,22 +195,24 @@ class _LoginState extends State<Login> {
                                   textController: _passwordController,
                                   hintText: "Enter your password",
                                   onSubmit: (_) => _handleEmailLogin(),
-                                  suffixIcon: IconButton( // Add the suffix icon
+                                  suffixIcon: IconButton(
+                                    // Add the suffix icon
                                     icon: Icon(
                                       _isPasswordVisible
                                           ? Icons.visibility
                                           : Icons.visibility_off,
-                                      color: Colors.grey, // Adjust color as needed
+                                      color:
+                                          Colors.grey, // Adjust color as needed
                                     ),
                                     onPressed: () {
                                       setState(() {
-                                        _isPasswordVisible = !_isPasswordVisible;
+                                        _isPasswordVisible =
+                                            !_isPasswordVisible;
                                       });
                                     },
                                   ),
                                 ),
-                                const SizedBox(height: 8), // Spacing below password field
-                                
+                                const SizedBox(height: 8),
                               ] else ...[
                                 CustomInput(
                                   textController: _phoneController,

@@ -1,14 +1,14 @@
 import 'package:another_flushbar/flushbar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:lokconnect/constants/custom_colors.dart';
-import 'package:lokconnect/features/home/ui/home.dart';
+import 'package:lokconnect/features/user_details/ui/user_member_home_page.dart';
 import 'package:lokconnect/widgets/firebase_phone_login.dart';
 
 class OTPScreen extends StatefulWidget {
   final String? verificationId;
-  OTPScreen({required this.verificationId});
+  final String? phoneNumber;
+  OTPScreen({required this.verificationId, required this.phoneNumber});
 
   @override
   State<OTPScreen> createState() => _OTPScreenState();
@@ -39,7 +39,7 @@ class _OTPScreenState extends State<OTPScreen> {
 
     if (user != null) {
       Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => Home()));
+          MaterialPageRoute(builder: (context) => UserMemberHomePage(phoneNumber: widget.phoneNumber!)));
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("OTP Verified Successfully")),
@@ -68,7 +68,7 @@ class _OTPScreenState extends State<OTPScreen> {
               child: Text(
                 textAlign: TextAlign.center,
                 "Please enter OTP received on your phone number.",
-                style: CustomTextStyle.subHeadingTextStyle,
+                // style: CustomTextStyle.subHeadingTextStyle,
               ),
             ),
             SizedBox(height: 20),

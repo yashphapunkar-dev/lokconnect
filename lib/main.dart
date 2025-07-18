@@ -4,7 +4,6 @@ import "package:flutter/material.dart";
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lokconnect/features/admin_user_service.dart';
 import 'package:lokconnect/features/home/bloc/home_bloc.dart';
-import 'package:lokconnect/features/home/ui/home.dart';
 import "package:lokconnect/features/splashscreen/splashscreen.dart";
 import 'package:firebase_core/firebase_core.dart';
 import 'package:lokconnect/default_firebase_options.dart';
@@ -14,8 +13,7 @@ import 'package:provider/provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
-    // name: 'lokconnect',
-    options: DefaultFirebaseOptions.currentPlatform
+    // options: DefaultFirebaseOptions.currentPlatform
     );
   runApp(MultiBlocProvider(
     providers: [

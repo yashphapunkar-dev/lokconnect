@@ -15,7 +15,8 @@ class LoadingCompletedState extends LoginActionState{}
 
 class OTPSentState extends LoginActionState {
   final String? verificationId;
-  OTPSentState({required this.verificationId});
+  final String? phoneNumber;
+  OTPSentState({required this.verificationId, required this.phoneNumber});
 }
 
 class OTPErrorState extends LoginActionState {

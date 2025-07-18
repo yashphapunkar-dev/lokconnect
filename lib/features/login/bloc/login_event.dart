@@ -10,7 +10,8 @@ class SendOTPEvent extends LoginEvent {
 
 class OTPSuccessEvent extends LoginEvent{
    final String? verificationId;
-   OTPSuccessEvent({required this.verificationId});
+   final String? phoneNumber;
+   OTPSuccessEvent({required this.verificationId, required this.phoneNumber});
 }
 
 class OTPErrorEvent extends LoginEvent{

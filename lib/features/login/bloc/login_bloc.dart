@@ -18,7 +18,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   Future<void> userLogin(SendOTPEvent event, Emitter<LoginState> emit) async {
     try {
       _authService.sendOTP(event.phoneNumber, (verificationId) {
-        add(OTPSuccessEvent(verificationId: verificationId));
+        add(OTPSuccessEvent(verificationId: verificationId, phoneNumber: event.phoneNumber));
       }, (error) {
         add(OTPErrorEvent(errorMessage: "OTP request failed: ${error.toString()}"));
       });
@@ -28,7 +28,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   }
 
   FutureOr<void> otpSuccessEvent(OTPSuccessEvent event, Emitter<LoginState> emit) {
-    emit(OTPSentState(verificationId: event.verificationId));
+    emit(OTPSentState(verificationId: event.verificationId, phoneNumber: event.phoneNumber));
   }
 
   FutureOr<void> otpErrorEvent(OTPErrorEvent event, Emitter<LoginState> emit) {

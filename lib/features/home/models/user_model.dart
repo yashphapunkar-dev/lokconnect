@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class UserModel {
   final String id;
   final String firstName;
@@ -38,6 +40,11 @@ class UserModel {
           : null,
       aprooved: map['aprooved'] ?? false    
     );
+  }
+
+  factory UserModel.fromSnapshot(DocumentSnapshot snapshot) {
+    final data = snapshot.data() as Map<String, dynamic>;
+    return UserModel.fromMap(data, snapshot.id);
   }
 
   Map<String, dynamic> toMap() {

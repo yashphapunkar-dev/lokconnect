@@ -430,16 +430,18 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                                                     ),
                                                     onPressed: () {
                                                       if (kIsWeb) {
-                                                        Navigator.of(context).push(
-                                                            MaterialPageRoute(
-                                                                builder:
-                                                                    ((context) =>
-                                                                        FirebasePdfViewer(
-                                                                          downloadUrl:
-                                                                              docUrl,
-                                                                          key: Key(
-                                                                              'a'),
-                                                                        ))));
+                                                        // Navigator.of(context).push(
+                                                        //     MaterialPageRoute(
+                                                        //         builder:
+                                                        //             (
+                                                        //               (context) =>
+                                                        //                 FirebasePdfViewer(
+                                                        //                   downloadUrl:
+                                                        //                       docUrl,
+                                                        //                   key: Key(
+                                                        //                       'a'),
+                                                        //                 )
+                                                        //                 )));
                                                         // FirebasePdfViewer(downloadUrl: docUrl, key: Key('a'),);
 
                                                         // html.window.open(
@@ -608,16 +610,16 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                                                     ),
                                                     onPressed: () {
                                                       if (kIsWeb) {
-                                                        Navigator.of(context).push(
-                                                            MaterialPageRoute(
-                                                                builder:
-                                                                    ((context) =>
-                                                                        FirebasePdfViewer(
-                                                                          downloadUrl:
-                                                                              docUrl,
-                                                                          key: Key(
-                                                                              'a'),
-                                                                        ))));
+                                                        // Navigator.of(context).push(
+                                                        //     MaterialPageRoute(
+                                                        //         builder:
+                                                        //             ((context) =>
+                                                        //                 FirebasePdfViewer(
+                                                        //                   downloadUrl:
+                                                        //                       docUrl,
+                                                        //                   key: Key(
+                                                        //                       'a'),
+                                                        //                 ))));
 
                                                         // html.window.open(
                                                         //     docUrl, '_blank');
