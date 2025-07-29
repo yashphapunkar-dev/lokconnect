@@ -8,7 +8,7 @@ class FirebaseOTPAuth {
 
   Future<void> sendOTP(String phoneNumber, Function(String?) onCodeSent, Function(String)? onError) async {
     await _auth.verifyPhoneNumber(
-      phoneNumber: '+91$phoneNumber',
+      phoneNumber: "+91${phoneNumber}",
       verificationCompleted: (PhoneAuthCredential credential) async {
         await _auth.signInWithCredential(credential);
       },

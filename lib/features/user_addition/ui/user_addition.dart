@@ -32,6 +32,7 @@ class _UserAdditionScreenState extends State<UserAdditionScreen> {
   String membershipNumber = '';
 
   final List<String> initialDocumentNames = [
+    "Profile Picture",
     "⁠Lease Deed",
     "Nomination Form",
     "⁠Member Application Form",
@@ -89,8 +90,20 @@ class _UserAdditionScreenState extends State<UserAdditionScreen> {
   }
 
   void _pickDocument(String field) async {
-    FilePickerResult? result =
-        await FilePicker.platform.pickFiles(withData: true);
+    FilePickerResult? result;
+
+    if (field == 'Profile Picture') {
+      result = await FilePicker.platform.pickFiles(
+        type: FileType.image, // Allow only image files
+        withData: true,
+      );
+    } else {
+      result = await FilePicker.platform.pickFiles(
+        type: FileType.custom, // Allow custom file types
+        allowedExtensions: ['pdf'], // Specifically allow only PDF
+        withData: true,
+      );
+    }
 
     if (result != null) {
       PlatformFile file = result.files.single;
