@@ -302,188 +302,435 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
           } else if (state is UserDetailsLoaded) {
             return Stack(
               children: [
+
                 LayoutBuilder(builder: (context, constraints) {
+            
                   final isWideScreen = kIsWeb && constraints.maxWidth > 800;
+                  
                   if (isWideScreen) {
-                    return Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          decoration: const BoxDecoration(
-                            color: CustomColors.primaryColor,
-                            borderRadius:
-                                BorderRadius.only(topLeft: Radius.circular(40)),
+
+  return SizedBox(
+  height: MediaQuery.sizeOf(context).height,
+  child: SingleChildScrollView( // Changed from ListView to SingleChildScrollView
+    child: Row( // Using Row to place user details and documents side-by-side
+      crossAxisAlignment: CrossAxisAlignment.start, // Align content to the top
+      children: [
+        // User Details Section (takes flexible width)
+        Expanded( // Use Expanded to give it available space
+          flex: 1, // Can adjust flex for desired proportion
+          child: SizedBox(
+            height: MediaQuery.sizeOf(context).height,
+            child: Container(
+              decoration: const BoxDecoration(
+                color: CustomColors.primaryColor,
+                borderRadius: BorderRadius.only(topLeft: Radius.circular(40)),
+              ),
+              padding: const EdgeInsets.all(20.0), // Added padding for better spacing
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+            
+                  state.user.documents?['Profile Picture'] == null
+                      ? Container(
+                          height: 65,
+                          width: 65,
+                          decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              border: Border.all(width: 1, color: Colors.grey),
+                              borderRadius:
+                                  const BorderRadius.all(Radius.circular(50))),
+                          child: Icon(
+                            Icons.person_2_outlined,
+                            size: 30,
+                            color: Colors.grey[600],
                           ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              InfoTile(
-                                filedName: "First Name",
-                                textController:
-                                    textFieldControllers['firstName'],
-                                value: "${state.user.firstName}",
-                              ),
-                              InfoTile(
-                                textController:
-                                    textFieldControllers['lastName'],
-                                filedName: "Last Name",
-                                value: "${state.user.lastName}",
-                              ),
-                              InfoTile(
-                                textController: textFieldControllers['email'],
-                                value: state.user.email,
-                                filedName: "Email",
-                              ),
-                              InfoTile(
-                                  textController:
-                                      textFieldControllers['phoneNumber'],
-                                  value: "${state.user.phoneNumber}",
-                                  filedName: "Phone Number"),
-                              InfoTile(
-                                  textController:
-                                      textFieldControllers['plotNumber'],
-                                  value: "${state.user.plotNumber}",
-                                  filedName: "Plot Number"),
-                              InfoTile(
-                                textController:
-                                    textFieldControllers['membershipNumber'],
-                                value: state.user.membershipNumber,
-                                filedName: "Membership Number",
-                              ),
-                            ],
+                        )
+                      : Container(
+                          decoration: const BoxDecoration(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(50))),
+                          child: CircleAvatar(
+                            radius: 40,
+                            backgroundImage:
+                                state.user.documents?['Profile Picture'] != null
+                                    ? NetworkImage(
+                                        state.user.documents!['Profile Picture'])
+                                    : null,
                           ),
                         ),
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: CustomColors.primaryColor,
-                              borderRadius: BorderRadius.only(
-                                  topRight: Radius.circular(40)),
+                 
+                 
+                  InfoTile(
+                    filedName: "First Name",
+                    textController: textFieldControllers['firstName'],
+                    value: "${state.user.firstName}",
+                  ),
+                  InfoTile(
+                    textController: textFieldControllers['lastName'],
+                    filedName: "Last Name",
+                    value: "${state.user.lastName}",
+                  ),
+                  InfoTile(
+                    textController: textFieldControllers['email'],
+                    value: state.user.email,
+                    filedName: "Email",
+                  ),
+                  InfoTile(
+                      textController: textFieldControllers['phoneNumber'],
+                      value: "${state.user.phoneNumber}",
+                      filedName: "Phone Number"),
+                  InfoTile(
+                      textController: textFieldControllers['plotNumber'],
+                      value: "${state.user.plotNumber}",
+                      filedName: "Plot Number"),
+                  InfoTile(
+                    textController: textFieldControllers['membershipNumber'],
+                    value: state.user.membershipNumber,
+                    filedName: "Membership Number",
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        // Documents Section (takes flexible width)
+        Expanded( // Use Expanded to give it available space
+          flex: 2, // Can adjust flex for desired proportion (e.g., documents take more space)
+          child: Container(
+            height: MediaQuery.sizeOf(context).height,
+            decoration:  BoxDecoration(
+              color: CustomColors.primaryColor,
+              borderRadius: BorderRadius.only(topRight: Radius.circular(40)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Documents",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  StreamBuilder<Map<String, String>>(
+                    stream: getDocumentsStream(widget.userId),
+                    builder: (context, snapshot) {
+                      if (isLoading || !snapshot.hasData) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      final documents = snapshot.data!;
+                      final docEntries = documents.entries.toList();
+                  
+
+                      return Wrap( 
+                        spacing: 10.0, 
+                        runSpacing: 10.0, 
+                        children: docEntries.map((entry) {
+
+                          final docName = entry.key;
+                          final docUrl = entry.value;
+                        
+
+                          return Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(20.0),
-                              child: ListView(
+                            elevation: 3,
+                            child: Container(
+                              width: 150, // Fixed width for each document card, adjust as needed
+                              // Min-width constraint for responsiveness could be added here
+                              // For example: constraints: BoxConstraints(minWidth: 120, maxWidth: 200),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                color: Colors.white,
+                              ),
+                              padding: const EdgeInsets.all(12.0),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.spaceAround,
                                 children: [
-                                  const Text(
-                                    "Documents",
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black,
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.picture_as_pdf,
+                                      size: 50,
+                                      color: Color(0xFFEF4444),
                                     ),
-                                  ),
-                                  const SizedBox(height: 20),
-                                  StreamBuilder<Map<String, String>>(
-                                    stream: getDocumentsStream(widget.userId),
-                                    builder: (context, snapshot) {
-                                      if (isLoading || !snapshot.hasData) {
-                                        return Center(
-                                            child: CircularProgressIndicator());
+                                    onPressed: () {
+                                      if (kIsWeb) {
+                                        Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                                builder: ((context) =>
+                                                    FirebasePdfViewer(
+                                                      downloadUrl: docUrl,
+                                                      key: const Key('a'),
+                                                    ))));
+                                      } else {
+                                        // Handle non-web PDF viewing
                                       }
-
-                                      final documents = snapshot.data!;
-                                      final docEntries =
-                                          documents.entries.toList();
-
-                                      return GridView.builder(
-                                        itemCount: docEntries.length,
-                                        gridDelegate:
-                                            SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: widthHandler(
-                                                  MediaQuery.sizeOf(context)
-                                                      .width)
-                                              .toInt(),
-                                          crossAxisSpacing: 10,
-                                          mainAxisSpacing: 10,
-                                        ),
-                                        shrinkWrap: true,
-                                        itemBuilder: (context, index) {
-                                          final docName = docEntries[index].key;
-                                          final docUrl =
-                                              docEntries[index].value;
-
-                                          return Card(
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                            elevation: 3,
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                                color: Colors.white,
-                                              ),
-                                              padding:
-                                                  const EdgeInsets.all(12.0),
-                                              child: Column(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceAround,
-                                                children: [
-                                                  IconButton(
-                                                    icon: const Icon(
-                                                      Icons.picture_as_pdf,
-                                                      size: 50,
-                                                      color: Color(0xFFEF4444),
-                                                    ),
-                                                    onPressed: () {
-                                                      if (kIsWeb) {
-                                                        Navigator.of(context).push(
-                                                            MaterialPageRoute(
-                                                                builder:
-                                                                    ((context) =>
-                                                                        FirebasePdfViewer(
-                                                                          downloadUrl:
-                                                                              docUrl,
-                                                                          key: Key(
-                                                                              'a'),
-                                                                        ))));
-                                                        // FirebasePdfViewer(downloadUrl: docUrl, key: Key('a'),);
-
-                                                        // html.window.open(
-                                                        //     docUrl, '_blank');
-                                                      } else {}
-                                                    },
-                                                  ),
-                                                  const SizedBox(height: 10),
-                                                  Text(
-                                                    docName,
-                                                    style: CustomTextStyle
-                                                        .subHeadingTextStyle,
-                                                  ),
-                                                  TextButton.icon(
-                                                    onPressed: () {
-                                                      onPressDeleteDoc(docName);
-                                                    },
-                                                    icon: const Icon(
-                                                        Icons.delete,
-                                                        color: Colors.red),
-                                                    label: const Text("Delete",
-                                                        style: TextStyle(
-                                                            color: Colors.red)),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      );
                                     },
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    docName,
+                                    style: CustomTextStyle.subHeadingTextStyle,
+                                    textAlign: TextAlign.center, // Center text
+                                    maxLines: 2, // Limit lines to prevent overflow
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  TextButton.icon(
+                                    onPressed: () {
+                                      onPressDeleteDoc(docName);
+                                    },
+                                    icon: const Icon(Icons.delete,
+                                        color: Colors.red),
+                                    label: const Text("Delete",
+                                        style: TextStyle(color: Colors.red)),
                                   ),
                                 ],
                               ),
                             ),
-                          ),
-                        ),
-                      ],
-                    );
-                  } else {
+                          );
+                        }).toList(),
+
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  ),
+);
+                    // return Row(
+                    //   crossAxisAlignment: CrossAxisAlignment.start,
+                    //   children: [
+                    //     Container(
+                    //       decoration: const BoxDecoration(
+                    //         color: CustomColors.primaryColor,
+                    //         borderRadius:
+                    //             BorderRadius.only(topLeft: Radius.circular(40)),
+                    //       ),
+                    //       child: SizedBox(
+                    //         height: MediaQuery.sizeOf(context).height,
+                    //         child: Column(
+                    //           // mainAxisAlignment: MainAxisAlignment.center,
+                    //           // crossAxisAlignment: CrossAxisAlignment.start,
+                    //           children: [
+                            
+                    //              state.user.documents?['Profile Picture'] == null
+                    //                   ? Container(
+                    //                       height: 50,
+                    //                       width: 50,
+                    //                       decoration: BoxDecoration(
+                    //                           color: Colors.grey[300],
+                    //                           border: Border.all(
+                    //                               width: 1, color: Colors.grey),
+                    //                           borderRadius: BorderRadius.all(
+                    //                               Radius.circular(50))),
+                    //                       child: Icon(
+                    //                         Icons.person_2_outlined,
+                    //                         size: 30,
+                    //                         color: Colors.grey[600],
+                    //                       ),
+                    //                     )
+                    //                   : Container(
+                    //                       decoration: BoxDecoration(
+                    //                           borderRadius: BorderRadius.all(
+                    //                               Radius.circular(50))),
+                    //                       child: CircleAvatar(
+                    //                         radius: 30,
+                    //                         backgroundImage: state.user.documents?[
+                    //                                     'Profile Picture'] !=
+                    //                                 null
+                    //                             ? NetworkImage(state.user.documents![
+                    //                                 'Profile Picture'])
+                    //                             : null,
+                    //                       ),
+                    //                     ),
+                            
+                            
+                    //             InfoTile(
+                    //               filedName: "First Name",
+                    //               textController:
+                    //                   textFieldControllers['firstName'],
+                    //               value: "${state.user.firstName}",
+                    //             ),
+                    //             InfoTile(
+                    //               textController:
+                    //                   textFieldControllers['lastName'],
+                    //               filedName: "Last Name",
+                    //               value: "${state.user.lastName}",
+                    //             ),
+                    //             InfoTile(
+                    //               textController: textFieldControllers['email'],
+                    //               value: state.user.email,
+                    //               filedName: "Email",
+                    //             ),
+                    //             InfoTile(
+                    //                 textController:
+                    //                     textFieldControllers['phoneNumber'],
+                    //                 value: "${state.user.phoneNumber}",
+                    //                 filedName: "Phone Number"),
+                    //             InfoTile(
+                    //                 textController:
+                    //                     textFieldControllers['plotNumber'],
+                    //                 value: "${state.user.plotNumber}",
+                    //                 filedName: "Plot Number"),
+                    //             InfoTile(
+                    //               textController:
+                    //                   textFieldControllers['membershipNumber'],
+                    //               value: state.user.membershipNumber,
+                    //               filedName: "Membership Number",
+                    //             ),
+                    //           ],
+                    //         ),
+                    //       ),
+                    //     ),
+                    //     Expanded(
+                    //       child: Container(
+                    //         decoration: BoxDecoration(
+                    //           color: CustomColors.primaryColor,
+                    //           borderRadius: BorderRadius.only(
+                    //               topRight: Radius.circular(40)),
+                    //         ),
+                    //         child: Padding(
+                    //           padding: const EdgeInsets.all(20.0),
+                    //           child: ListView(
+                    //             children: [
+                    //               const Text(
+                    //                 "Documents",
+                    //                 style: TextStyle(
+                    //                   fontSize: 18,
+                    //                   fontWeight: FontWeight.bold,
+                    //                   color: Colors.black,
+                    //                 ),
+                    //               ),
+                    //               const SizedBox(height: 20),
+                    //               StreamBuilder<Map<String, String>>(
+                    //                 stream: getDocumentsStream(widget.userId),
+                    //                 builder: (context, snapshot) {
+                    //                   if (isLoading || !snapshot.hasData) {
+                    //                     return Center(
+                    //                         child: CircularProgressIndicator());
+                    //                   }
+            
+                    //                   final documents = snapshot.data!;
+                    //                   final docEntries =
+                    //                       documents.entries.toList();
+            
+                    //                   return GridView.builder(
+                    //                     itemCount: docEntries.length,
+                    //                     gridDelegate:
+                    //                         SliverGridDelegateWithFixedCrossAxisCount(
+                    //                       crossAxisCount: widthHandler(
+                    //                               MediaQuery.sizeOf(context)
+                    //                                   .width)
+                    //                           .toInt(),
+                    //                       crossAxisSpacing: 10,
+                    //                       mainAxisSpacing: 10,
+                    //                     ),
+                    //                     shrinkWrap: true,
+                    //                     itemBuilder: (context, index) {
+                    //                       final docName = docEntries[index].key;
+                    //                       final docUrl =
+                    //                           docEntries[index].value;
+            
+                    //                       return Card(
+                    //                         shape: RoundedRectangleBorder(
+                    //                           borderRadius:
+                    //                               BorderRadius.circular(12),
+                    //                         ),
+                    //                         elevation: 3,
+                    //                         child: Container(
+                    //                           decoration: BoxDecoration(
+                    //                             borderRadius:
+                    //                                 BorderRadius.circular(12),
+                    //                             color: Colors.white,
+                    //                           ),
+                    //                           padding:
+                    //                               const EdgeInsets.all(12.0),
+                    //                           child: Column(
+                    //                             mainAxisAlignment:
+                    //                                 MainAxisAlignment
+                    //                                     .spaceAround,
+                    //                             children: [
+                    //                               IconButton(
+                    //                                 icon: const Icon(
+                    //                                   Icons.picture_as_pdf,
+                    //                                   size: 50,
+                    //                                   color: Color(0xFFEF4444),
+                    //                                 ),
+                    //                                 onPressed: () {
+                    //                                   if (kIsWeb) {
+                    //                                     Navigator.of(context).push(
+                    //                                         MaterialPageRoute(
+                    //                                             builder:
+                    //                                                 ((context) =>
+                    //                                                     FirebasePdfViewer(
+                    //                                                       downloadUrl:
+                    //                                                           docUrl,
+                    //                                                       key: Key(
+                    //                                                           'a'),
+                    //                                                     ))));
+                    //                                     // FirebasePdfViewer(downloadUrl: docUrl, key: Key('a'),);
+            
+                    //                                     // html.window.open(
+                    //                                     //     docUrl, '_blank');
+                    //                                   } else {}
+                    //                                 },
+                    //                               ),
+                    //                               const SizedBox(height: 10),
+                    //                               Text(
+                    //                                 docName,
+                    //                                 style: CustomTextStyle
+                    //                                     .subHeadingTextStyle,
+                    //                               ),
+                    //                               TextButton.icon(
+                    //                                 onPressed: () {
+                    //                                   onPressDeleteDoc(docName);
+                    //                                 },
+                    //                                 icon: const Icon(
+                    //                                     Icons.delete,
+                    //                                     color: Colors.red),
+                    //                                 label: const Text("Delete",
+                    //                                     style: TextStyle(
+                    //                                         color: Colors.red)),
+                    //                               ),
+                    //                             ],
+                    //                           ),
+                    //                         ),
+                    //                       );
+                    //                     },
+                    //                   );
+                    //                 },
+                    //               ),
+                    //             ],
+                    //           ),
+                    //         ),
+                    //       ),
+                    //     ),
+                    //   ],
+                    // );
+                 
+                 
+                  } 
+                  
+                  
+                  else {
+                    
                     return SizedBox(
                       height: MediaQuery.sizeOf(context).height,
                       child: ListView(
                         children: [
+
                           Container(
                             padding: EdgeInsets.only(top: 30),
                             decoration: const BoxDecoration(
@@ -491,6 +738,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                               borderRadius: BorderRadius.only(
                                   topLeft: Radius.circular(40)),
                             ),
+
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.center,
@@ -557,11 +805,11 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                                         return Center(
                                             child: CircularProgressIndicator());
                                       }
-
+            
                                       final documents = snapshot.data!;
                                       final docEntries =
                                           documents.entries.toList();
-
+            
                                       return GridView.builder(
                                         itemCount: docEntries.length,
                                         gridDelegate:
@@ -579,7 +827,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                                           final docName = docEntries[index].key;
                                           final docUrl =
                                               docEntries[index].value;
-
+            
                                           return Card(
                                             shape: RoundedRectangleBorder(
                                               borderRadius:
@@ -618,7 +866,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                                                                           key: Key(
                                                                               'a'),
                                                                         ))));
-
+            
                                                         // html.window.open(
                                                         //     docUrl, '_blank');
                                                       } else {

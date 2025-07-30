@@ -1,6 +1,4 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 class InfoTile extends StatelessWidget {
   final String value;
@@ -14,7 +12,7 @@ class InfoTile extends StatelessWidget {
     textController!.text = value;
 
      widthHandler(double width) {
-  if (width >= 1000) return 250; // Desktop
+  if (width >= 1000) return 450; // Desktop
   if (width >= 700) return 250;  // Tablet
   return double.maxFinite;                    // Mobile
 }
