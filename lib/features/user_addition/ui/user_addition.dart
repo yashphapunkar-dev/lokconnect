@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:lokconnect/constants/custom_colors.dart';
 import 'package:lokconnect/features/home/ui/home.dart';
 import 'package:lokconnect/features/user_addition/bloc/user_addition_bloc.dart';
@@ -32,6 +33,7 @@ class _UserAdditionScreenState extends State<UserAdditionScreen> {
   String membershipNumber = '';
 
   final List<String> initialDocumentNames = [
+    "Profile Picture",
     "⁠Lease Deed",
     "Nomination Form",
     "⁠Member Application Form",
@@ -88,9 +90,39 @@ class _UserAdditionScreenState extends State<UserAdditionScreen> {
     );
   }
 
-  void _pickDocument(String field) async {
-    FilePickerResult? result =
-        await FilePicker.platform.pickFiles(withData: true);
+void _pickDocument(String field) async {
+  if (field == 'Profile Picture') {
+    final ImagePicker _picker = ImagePicker();
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      final Uint8List bytes = await image.readAsBytes();
+      final PlatformFile platformFile = PlatformFile(
+        name: image.name,
+        size: bytes.length,
+        bytes: bytes,
+        path: kIsWeb ? null : image.path, // Path is not meaningful on web
+        // extension: image.name.split('.').last,
+      );
+
+      setState(() {
+        customDocuments[field] = platformFile;
+      });
+    }
+  } else {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      withData: true,
+      type: FileType.custom,
+      allowedExtensions: [
+        'pdf',
+        'doc',
+        'docx',
+        'txt',
+        'xlsx',
+        'xls',
+        // Add other common document types as needed
+      ],
+    );
 
     if (result != null) {
       PlatformFile file = result.files.single;
@@ -99,21 +131,19 @@ class _UserAdditionScreenState extends State<UserAdditionScreen> {
       });
     }
   }
+}
 
-  // MODIFIED: This function now only removes the file from the field.
   void _clearDocument(String field) {
     setState(() {
       customDocuments[field] = null;
     });
   }
 
-  // NEW: This function removes the entire document field (key-value pair).
   void _deleteDocumentField(String field) {
     setState(() {
       customDocuments.remove(field);
     });
   }
-
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
