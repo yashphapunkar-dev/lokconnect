@@ -1,5 +1,6 @@
 # Uncomment this line to define a global platform for your project
-platform :ios, '18.0'
+use_frameworks!
+platform :ios, '17.0'
 pod 'Firebase/Firestore', '10.25.0', :modular_headers => true
 pod 'Firebase/CoreOnly', '10.25.0', :modular_headers => true
 pod 'Firebase/Auth', '10.25.0', :modular_headers => true

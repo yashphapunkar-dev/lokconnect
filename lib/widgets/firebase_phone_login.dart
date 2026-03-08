@@ -20,7 +20,10 @@ class FirebaseOTPAuth {
       },
 
       codeSent: (String verificationId, int? resendToken) {
+        print("VERIFICATION");
+        print(verificationId);
         _verificationId = verificationId;
+      
         onCodeSent(verificationId);
       },
       codeAutoRetrievalTimeout: (String verificationId) {

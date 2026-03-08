@@ -154,6 +154,7 @@ class _LoginState extends State<Login> {
                         onPress: kIsWeb ? _handleEmailLogin : _handleLogin,
                         buttonText: "Login",
                       ),
+                      Text("Appledore Consulting Group©", style: TextStyle(color: Colors.black, fontWeight: FontWeight.w400, fontSize: 16), textAlign: TextAlign.center,),
                     ],
                   ),
           ),
@@ -196,13 +197,12 @@ class _LoginState extends State<Login> {
                                   hintText: "Enter your password",
                                   onSubmit: (_) => _handleEmailLogin(),
                                   suffixIcon: IconButton(
-                                    // Add the suffix icon
                                     icon: Icon(
                                       _isPasswordVisible
                                           ? Icons.visibility
                                           : Icons.visibility_off,
                                       color:
-                                          Colors.grey, // Adjust color as needed
+                                          Colors.grey, 
                                     ),
                                     onPressed: () {
                                       setState(() {
@@ -228,6 +228,7 @@ class _LoginState extends State<Login> {
                   ),
                 ),
               ),
+               
             ],
           ),
         );

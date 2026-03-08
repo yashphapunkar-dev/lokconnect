@@ -54,6 +54,8 @@ dependencies:
   syncfusion_flutter_pdfviewer: 23.2.5
   syncfusion_flutter_core: 23.2.5
   url_launcher: ^6.3.0
+  firebase_app_check: ^0.2.2+7
+  change_app_package_name: ^1.1.0
 
 dev_dependencies:
   flutter_test:

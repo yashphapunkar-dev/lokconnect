@@ -9,6 +9,7 @@ class UserModel {
   final String plotNumber;
   final String membershipNumber;
   final String? userId;
+  final String?  profilePicture;
   final Map<String, dynamic>? documents; // <-- Optional documents list
   bool aprooved;
 
@@ -22,7 +23,8 @@ class UserModel {
     required this.membershipNumber,
     this.userId,
     this.aprooved = false,
-    this.documents, // <-- Optional in constructor
+    this.documents,
+    this.profilePicture,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map, [String? userId]) {
@@ -38,7 +40,8 @@ class UserModel {
       documents: map['documents'] != null
           ? Map<String, dynamic>.from(map['documents'])
           : null,
-      aprooved: map['aprooved'] ?? false    
+      aprooved: map['aprooved'] ?? false,
+      profilePicture: map['profilePicture'],
     );
   }
 

@@ -12,6 +12,53 @@
           "package_name": "com.example.lokconnect"
         }
       },
+      "oauth_client": [
+        {
+          "client_id": "707519257282-bfupa0jbk4tvi8nbv9rf7l9c86samq3b.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.lokconnect",
+            "certificate_hash": "37d5c3317a274313627c6fcb35ef6cbdc7ed9474"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5WoRy6u7kp-QfqUxv5wZYVUMWn0Db874"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:707519257282:android:d2a01886e04946e487b95b",
+        "android_client_info": {
+          "package_name": "com.exapmple.lokconnectandroid"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5WoRy6u7kp-QfqUxv5wZYVUMWn0Db874"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:707519257282:android:264239364932cd3987b95b",
+        "android_client_info": {
+          "package_name": "com.lokconnect.app"
+        }
+      },
       "oauth_client": [],
       "api_key": [
         {

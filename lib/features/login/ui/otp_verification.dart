@@ -45,6 +45,8 @@ class _OTPScreenState extends State<OTPScreen> {
         SnackBar(content: Text("OTP Verified Successfully")),
       );
     } else {
+      print("OTP RESPONSE!");
+      print(user);
       await Flushbar(
         flushbarPosition: FlushbarPosition.BOTTOM,
         title: 'Alert',
