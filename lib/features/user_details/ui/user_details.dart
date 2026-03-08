@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
@@ -7,11 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lokconnect/constants/custom_colors.dart';
-import 'package:lokconnect/features/home/models/user_model.dart';
 import 'package:lokconnect/features/home/ui/home.dart';
 import 'package:lokconnect/features/user_details/bloc/user_details_bloc.dart';
 import 'package:lokconnect/features/user_details/ui/pdf_viewer_screen.dart';
 import 'package:lokconnect/features/user_details/ui/ui_functions.dart';
+import 'package:lokconnect/widgets/custom_alert.dart';
 import 'package:lokconnect/widgets/info_tile.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lokconnect/widgets/uploading_model.dart';
@@ -102,47 +101,93 @@ String? _pickedImageName;
   bool docsLoading = false;
 
   Future<void> updateUserProfileAndDocuments({
-    required Map<String, TextEditingController> textFieldControllers,
-    // required Map<String, dynamic>? updatedDocuments,
-    required BuildContext context,
-    required String userId,
-    required VoidCallback onSuccessNavigate,
-    required Function(bool) onLoading,
-  }) async {
-    onLoading(true);
+  required Map<String, TextEditingController> textFieldControllers,
+  required BuildContext context,
+  required String userId,
+  required VoidCallback onSuccessNavigate,
+  required Function(bool) onLoading,
+}) async {
+  onLoading(true);
 
-    try {
-      await FirebaseFirestore.instance.collection("users").doc(userId).update({
-        "firstName": textFieldControllers["firstName"]?.text.trim(),
-        "lastName": textFieldControllers["lastName"]?.text.trim(),
-        "email": textFieldControllers["email"]?.text.trim(),
-        "phoneNumber": textFieldControllers["phoneNumber"]?.text.trim(),
-        "plotNumber": textFieldControllers["plotNumber"]?.text.trim(),
-        "membershipNumber":
-            textFieldControllers["membershipNumber"]?.text.trim(),
-        "aprooved": false,
-      });
+  // 1. Prepare formatted values
+  final String phoneNumber = textFieldControllers["phoneNumber"]?.text.trim() ?? "";
+  final String email = textFieldControllers["email"]?.text.trim() ?? "";
+  final String membership = textFieldControllers["membershipNumber"]?.text.trim() ?? "";
+  final String plot = textFieldControllers["plotNumber"]?.text.trim() ?? "";
+  final String fullPhone = "$phoneNumber";
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("User data & documents updated!")),
-      );
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
+  CollectionReference usersRef = firestore.collection("users");
 
-      Future.delayed(
-        Duration(milliseconds: 500),
-        () => onSuccessNavigate(),
-      );
-    } on FirebaseException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Firebase error: ${e.message}")),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Unexpected error: $e")),
-      );
-    } finally {
+  try {
+    // 2. Query for duplicates EXCLUDING the current user ID
+    QuerySnapshot querySnapshot = await usersRef
+        .where(
+          Filter.and(
+            // Check if ANY of these unique fields exist...
+            Filter.or(
+              Filter("phoneNumber", isEqualTo: fullPhone),
+              Filter("email", isEqualTo: email),
+              Filter("membershipNumber", isEqualTo: membership),
+              Filter("plotNumber", isEqualTo: plot),
+            ),
+            // ...but make sure the document found is NOT the one we are editing
+            Filter(FieldPath.documentId, isNotEqualTo: userId),
+          ),
+        )
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
       onLoading(false);
+      
+      // Identify which field is the culprit for a better UI message
+      var conflict = querySnapshot.docs.first.data() as Map<String, dynamic>;
+      String fieldName = "";
+      if (conflict['email'] == email) fieldName = "Email";
+      else if (conflict['phoneNumber'] == fullPhone) fieldName = "Phone Number";
+      else if (conflict['membershipNumber'] == membership) fieldName = "Membership Number";
+      else if (conflict['plotNumber'] == plot) fieldName = "Plot Number";
+
+      showCustomAlert(
+          context: context,
+          title: "Duplicate Found",
+          message: "The $fieldName is already assigned to another user.");
+      return; // Stop execution here
     }
+
+    await usersRef.doc(userId).update({
+      "firstName": textFieldControllers["firstName"]?.text.trim(),
+      "lastName": textFieldControllers["lastName"]?.text.trim(),
+      "email": email,
+      "phoneNumber": fullPhone, 
+      "plotNumber": plot,
+      "membershipNumber": membership,
+      "aprooved": false, 
+    });
+
+    textFieldControllers["phoneNumber"]?.text = phoneNumber;
+    textFieldControllers["email"]?.text = email;
+    textFieldControllers["membershipNumber"]?.text = membership;
+    textFieldControllers["plotNumber"]?.text = plot;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("User data updated successfully!")),
+    );
+
+    Future.delayed(const Duration(milliseconds: 500), onSuccessNavigate);
+    
+  } on FirebaseException catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Firebase error: ${e.message}")),
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Unexpected error: $e")),
+    );
+  } finally {
+    onLoading(false);
   }
+}
 
   Future<void> showAddDocumentDialog(
       BuildContext context, String userId) async {
@@ -307,27 +352,7 @@ String? _pickedImageName;
         );
       }
 
-      // 4. Update Local State (after successful upload)
-      // if (mounted) {
         setState(() {
-          // Assuming your state is immutable and you're using Bloc,
-          // 'state' parameter here is a local copy. You need to dispatch an event
-          // or use context.read<BlocType>().add() to update the actual Bloc state.
-          // For now, I'll show how you'd update if 'state' was a mutable property
-          // of the State class, but remember Bloc's pattern.
-
-          // If 'state' is directly part of your StatefulWidget's State, this is fine:
-          // state = state.copyWith(user: state.user.copyWith(profilePicture: downloadUrl));
-
-          // If 'state' comes from a Bloc/Cubit (more likely for your project),
-          // you should dispatch an event to your Bloc/Cubit to update the user's profile picture.
-          // Example (assuming you have a Bloc/Cubit that manages User state):
-          // context.read<UserBloc>().add(UpdateUserProfilePicture(downloadUrl));
-
-          // For the local UI representation in the dialog:
-          // _pickedImageBytes = null;
-          // _pickedImagePath = null;
-          // _pickedImageName = null; 
           _isUploading = false;
         });
       // }
@@ -550,7 +575,6 @@ void _showImageOptionsAlert(state) {
               if (state is UserDetailsLoaded) {
                 updateUserProfileAndDocuments(
                   textFieldControllers: textFieldControllers,
-                  // updatedDocuments: state.user.documents,
                   context: context,
                   userId: widget.userId,
                   onSuccessNavigate: () {

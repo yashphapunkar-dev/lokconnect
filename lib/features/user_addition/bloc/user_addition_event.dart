@@ -13,6 +13,7 @@ class SubmitUserForm extends UserAdditionEvent {
   final String plotNumber;
   final String membershipNumber;
   final Map<String, dynamic> documents;
+  final BuildContext context;
 
   SubmitUserForm({
     required this.firstName,
@@ -22,6 +23,7 @@ class SubmitUserForm extends UserAdditionEvent {
     required this.plotNumber,
     required this.membershipNumber,
     required this.documents,
+    required this.context,
   });
 
   @override

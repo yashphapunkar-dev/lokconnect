@@ -9,6 +9,7 @@ import "package:lokconnect/features/splashscreen/splashscreen.dart";
 import 'package:firebase_core/firebase_core.dart';
 import 'package:lokconnect/default_firebase_options.dart';
 import 'package:lokconnect/features/user_addition/bloc/user_addition_bloc.dart';
+import 'package:lokconnect/features/user_addition/ui/user_addition.dart';
 import 'package:provider/provider.dart';
 
 void main() async {

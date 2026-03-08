@@ -5,12 +5,16 @@ import 'package:equatable/equatable.dart';
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
+import 'package:lokconnect/features/home/models/user_model.dart';
+import 'package:lokconnect/widgets/custom_alert.dart';
 part 'user_addition_event.dart';
 part 'user_addition_state.dart';
 
 class UserAdditionBloc extends Bloc<UserAdditionEvent, UserAdditionState> {
   final FirebaseStorage storage;
   final FirebaseFirestore firestore;
+   
 
   UserAdditionBloc({required this.storage, required this.firestore})
       : super(UserAdditionState()) {
@@ -57,8 +61,6 @@ class UserAdditionBloc extends Bloc<UserAdditionEvent, UserAdditionState> {
     emit(state.copyWith(uploadedDocuments: newDocs));
   }
 
-
-
   Future<void> _onSubmitUserForm(
       SubmitUserForm event, Emitter<UserAdditionState> emit) async {
     emit(state.copyWith(isLoading: true));
@@ -75,7 +77,8 @@ class UserAdditionBloc extends Bloc<UserAdditionEvent, UserAdditionState> {
 
         if (file is PlatformFile && file.bytes != null) {
           final Uint8List fileBytes = file.bytes!;
-          final String fileExtension = file.extension ?? 'bin'; // Default to bin if no extension
+          final String fileExtension =
+              file.extension ?? 'bin'; // Default to bin if no extension
           String contentType;
 
           // Determine content type based on fieldName or file extension
@@ -90,24 +93,28 @@ class UserAdditionBloc extends Bloc<UserAdditionEvent, UserAdditionState> {
             } else {
               // Fallback for unknown image types or if field is "Profile Picture" but file type is not standard image
               contentType = 'application/octet-stream'; // Generic binary
-              print("Warning: Profile Picture has unexpected extension: $fileExtension. Uploading as octet-stream.");
+              print(
+                  "Warning: Profile Picture has unexpected extension: $fileExtension. Uploading as octet-stream.");
             }
           } else if (fileExtension == 'pdf') {
             contentType = 'application/pdf';
           } else {
             // Fallback for other document types or if type is not recognized
             contentType = 'application/octet-stream';
-            print("Warning: Document '$fieldName' has unexpected extension: $fileExtension. Uploading as octet-stream.");
+            print(
+                "Warning: Document '$fieldName' has unexpected extension: $fileExtension. Uploading as octet-stream.");
           }
 
-
-          final Reference ref = storage.ref().child("documents/${fullPhoneNumber}_${fieldName}_${DateTime.now().millisecondsSinceEpoch}.$fileExtension");
+          final Reference ref = storage.ref().child(
+              "documents/${fullPhoneNumber}_${fieldName}_${DateTime.now().millisecondsSinceEpoch}.$fileExtension");
 
           final UploadTask uploadTask = ref.putData(
             fileBytes,
             SettableMetadata(
               contentType: contentType,
-              contentDisposition: fieldName == "Profile Picture" ? 'inline' : 'attachment', // Profile picture inline, docs attachment
+              contentDisposition: fieldName == "Profile Picture"
+                  ? 'inline'
+                  : 'attachment', // Profile picture inline, docs attachment
             ),
           );
 
@@ -120,15 +127,21 @@ class UserAdditionBloc extends Bloc<UserAdditionEvent, UserAdditionState> {
             documentUrls[fieldName] = downloadUrl;
           }
         } else {
-          print("Warning: File for $fieldName is not a valid PlatformFile or has no bytes.");
+          print(
+              "Warning: File for $fieldName is not a valid PlatformFile or has no bytes.");
         }
       }
 
       // 2. Check for Existing User
       CollectionReference usersRef = firestore.collection("users");
-      QuerySnapshot querySnapshot = await usersRef
-          .where("phoneNumber", isEqualTo: fullPhoneNumber)
-          .get();
+
+      // QuerySnapshot querySnapshot = await usersRef
+      //     .where(Filter.or(
+      //       Filter("phoneNumber", isEqualTo: fullPhoneNumber),
+      //       Filter("lastName", isEqualTo: event.lastName),
+      //       Filter("email", isEqualTo: event.email),
+      //     ))
+      //     .get();
 
       // 3. Update or Add User Data
       final Map<String, dynamic> userData = {
@@ -141,15 +154,22 @@ class UserAdditionBloc extends Bloc<UserAdditionEvent, UserAdditionState> {
         "documents": documentUrls, // Other documents
       };
 
-      if (querySnapshot.docs.isNotEmpty) {
-        DocumentReference existingUserDoc = querySnapshot.docs.first.reference;
-        await existingUserDoc.update({
-          ...userData, // Spread existing data
-          "verified": false, 
-          "aprooved": false, // Keep aprooved false on update, if intent is to re-approve
-          "updatedAt": FieldValue.serverTimestamp(),
-        });
-      } else {
+      // if (querySnapshot.docs.isNotEmpty) {
+        // print("TEST DUPLICATE");
+        // print(querySnapshot.docs);
+        // DocumentReference existingUserDoc = querySnapshot.docs.first.reference;
+        // showCustomAlert(
+        //     context: event.context,
+        //     title: "User with same phone number already exists!",
+        //     message: "Please update the existing user for any changes.");
+        // await existingUserDoc.update({
+        //   ...userData, // Spread existing data
+        //   "verified": false,
+        //   "aprooved": false, // Keep aprooved false on update, if intent is to re-approve
+        //   "updatedAt": FieldValue.serverTimestamp(),
+        // });
+      // } 
+      // else {
         // Add new user
         await usersRef.add({
           ...userData, // Spread existing data
@@ -158,7 +178,7 @@ class UserAdditionBloc extends Bloc<UserAdditionEvent, UserAdditionState> {
           "aprooved": false, // New users are initially not approved
           "createdAt": FieldValue.serverTimestamp(),
         });
-      }
+      // }
 
       emit(UserAdditionState()); // Indicate success
     } catch (e) {
@@ -168,82 +188,80 @@ class UserAdditionBloc extends Bloc<UserAdditionEvent, UserAdditionState> {
   }
 }
 
-  // Future<void> _onSubmitUserForm(
-  //     SubmitUserForm event, Emitter<UserAdditionState> emit) async {
-  //   emit(state.copyWith(isLoading: true));
+// Future<void> _onSubmitUserForm(
+//     SubmitUserForm event, Emitter<UserAdditionState> emit) async {
+//   emit(state.copyWith(isLoading: true));
 
-  //   try {
-  //     Map<String, String> documentUrls = {};
+//   try {
+//     Map<String, String> documentUrls = {};
 
-  //     CollectionReference usersRef = firestore.collection("users");
-  //     QuerySnapshot querySnapshot = await usersRef
-  //         .where("phoneNumber", isEqualTo: "+91${event.phoneNumber}")
-  //         .get();
+//     CollectionReference usersRef = firestore.collection("users");
+//     QuerySnapshot querySnapshot = await usersRef
+//         .where("phoneNumber", isEqualTo: "+91${event.phoneNumber}")
+//         .get();
 
-  //     for (var entry in event.documents.entries) {
-  //       final String fieldName = entry.key;
-  //       final dynamic file = entry.value;
+//     for (var entry in event.documents.entries) {
+//       final String fieldName = entry.key;
+//       final dynamic file = entry.value;
 
-  //       if (file is PlatformFile && file.bytes != null) {
-  //         final String fileName = file.name;
-  //         final Uint8List fileBytes = file.bytes!;
+//       if (file is PlatformFile && file.bytes != null) {
+//         final String fileName = file.name;
+//         final Uint8List fileBytes = file.bytes!;
 
-  //         final Reference ref = storage.ref().child("documents/$fileName");
-  //         await ref.putData(
-  //           fileBytes,
-  //           SettableMetadata(
-  //             contentType: 'application/pdf',
-  //             contentDisposition: 'inline',
-  //           ),
-  //         );
+//         final Reference ref = storage.ref().child("documents/$fileName");
+//         await ref.putData(
+//           fileBytes,
+//           SettableMetadata(
+//             contentType: 'application/pdf',
+//             contentDisposition: 'inline',
+//           ),
+//         );
 
-  //         final String downloadUrl = await ref.getDownloadURL();
-  //         documentUrls[fieldName] = downloadUrl;
-  //       }
-  //     }
+//         final String downloadUrl = await ref.getDownloadURL();
+//         documentUrls[fieldName] = downloadUrl;
+//       }
+//     }
 
-  //     String? profilePictureUrl;
-  //     if (documentUrls.containsKey("Profile Picture")) {
-  //       profilePictureUrl = documentUrls["Profile Picture"];
-  //       documentUrls.remove("Profile Picture");
-  //     }
+//     String? profilePictureUrl;
+//     if (documentUrls.containsKey("Profile Picture")) {
+//       profilePictureUrl = documentUrls["Profile Picture"];
+//       documentUrls.remove("Profile Picture");
+//     }
 
-  //     if (querySnapshot.docs.isNotEmpty) {
-  //       DocumentReference existingUserDoc = querySnapshot.docs.first.reference;
-  //       await existingUserDoc.update({
-  //         "firstName": event.firstName,
-  //         "profilePicture": profilePictureUrl ?? '',
-  //         "lastName": event.lastName,
-  //         "email": event.email,
-  //         "plotNumber": event.plotNumber,
-  //         "membershipNumber": event.membershipNumber,
-  //         "documents": documentUrls,
-  //         "verified": false,
-  //         "aprooved": false,
-  //         "updatedAt": FieldValue.serverTimestamp(),
-  //       });
-  //     } else {
-  //       await usersRef.add({
-  //         "firstName": event.firstName,
-  //         "lastName": event.lastName,
-  //         "email": event.email,
-  //         "profilePicture": profilePictureUrl ?? '',
-  //         "phoneNumber": event.phoneNumber,
-  //         "plotNumber": event.plotNumber,
-  //         "membershipNumber": event.membershipNumber,
-  //         "documents": documentUrls,
-  //         "aprooved": false,
-  //         "createdAt": FieldValue.serverTimestamp(),
-  //       });
-  //     }
+//     if (querySnapshot.docs.isNotEmpty) {
+//       DocumentReference existingUserDoc = querySnapshot.docs.first.reference;
+//       await existingUserDoc.update({
+//         "firstName": event.firstName,
+//         "profilePicture": profilePictureUrl ?? '',
+//         "lastName": event.lastName,
+//         "email": event.email,
+//         "plotNumber": event.plotNumber,
+//         "membershipNumber": event.membershipNumber,
+//         "documents": documentUrls,
+//         "verified": false,
+//         "aprooved": false,
+//         "updatedAt": FieldValue.serverTimestamp(),
+//       });
+//     } else {
+//       await usersRef.add({
+//         "firstName": event.firstName,
+//         "lastName": event.lastName,
+//         "email": event.email,
+//         "profilePicture": profilePictureUrl ?? '',
+//         "phoneNumber": event.phoneNumber,
+//         "plotNumber": event.plotNumber,
+//         "membershipNumber": event.membershipNumber,
+//         "documents": documentUrls,
+//         "aprooved": false,
+//         "createdAt": FieldValue.serverTimestamp(),
+//       });
+//     }
 
-  //     emit(UserAdditionState());
-  //   } catch (e) {
-  //     print("Error submitting form: $e");
-  //     emit(state.copyWith(isLoading: false));
-  //   }
-  // }
-
-
+//     emit(UserAdditionState());
+//   } catch (e) {
+//     print("Error submitting form: $e");
+//     emit(state.copyWith(isLoading: false));
+//   }
+// }
 
 // }

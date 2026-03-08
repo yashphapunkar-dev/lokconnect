@@ -56,7 +56,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 Future<FetchUsersResult?> _fetchUsers({required bool isLoadMore}) async {
     try {
       Query query =
-          _firestore.collection('users').orderBy("firstName").limit(_limit);
+          _firestore.collection('users').orderBy("firstName");
 
       if (role != 'superadmin') {
         query = query.where("aprooved", isEqualTo: true);
