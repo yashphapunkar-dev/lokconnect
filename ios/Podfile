@@ -1,13 +1,7 @@
-# Uncomment this line to define a global platform for your project
 use_frameworks!
 platform :ios, '17.0'
-pod 'Firebase/Firestore', '10.25.0', :modular_headers => true
-pod 'Firebase/CoreOnly', '10.25.0', :modular_headers => true
-pod 'Firebase/Auth', '10.25.0', :modular_headers => true
+$FirebaseSDKVersion = '10.25.0'
 
-
-
-# CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
 project 'Runner', {
@@ -33,7 +27,6 @@ require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelpe
 
 flutter_ios_podfile_setup
 
-use_modular_headers!
 target 'Runner' do
   use_frameworks!
   use_modular_headers!
@@ -47,5 +40,39 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+
+    # Align pod deployment targets with iOS 17.0 & allow non-modular header imports
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
+      config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+      # No DEFINES_MODULE override here — it was fighting the allow-flag above.
+    end
+
+    if target.name == 'BoringSSL-GRPC'
+      target.source_build_phase.files.each do |file|
+        if file.settings && file.settings['COMPILER_FLAGS']
+          flags = file.settings['COMPILER_FLAGS'].split
+          flags.reject! { |flag| flag == '-GCC_WARN_INHIBIT_ALL_WARNINGS' || flag == '-G' }
+          file.settings['COMPILER_FLAGS'] = flags.join(' ')
+        end
+      end
+    end
+  end
+
+  pods_dir = installer.sandbox.root
+
+  # Patch gRPC template parsing error for Xcode 16+ / Clang 19
+  Dir.glob("#{pods_dir}/**/*.{h,cc,cpp}").each do |file_path|
+    next unless File.exist?(file_path)
+
+    text = File.read(file_path)
+    patched = text.gsub('Traits::template CallSeqFactory(', 'Traits::template CallSeqFactory<>(')
+                  .gsub('Traits::template CallSeqFactory<', 'Traits::template CallSeqFactory<')
+
+    if patched != text
+      File.chmod(0644, file_path)
+      File.write(file_path, patched)
+      puts "Successfully patched gRPC Xcode 16 issue in: #{file_path}"
+    end
   end
 end
