@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lokconnect/features/user_details/ui/user_member_home_page.dart';
 import 'package:lokconnect/widgets/firebase_phone_login.dart';
-import 'package:lokconnect/theme/app_palette.dart'; // adjust import path to match your project
+import 'package:lokconnect/theme/app_palette.dart';
 
 class OTPScreen extends StatefulWidget {
   final String? verificationId;
@@ -60,33 +60,52 @@ class _OTPScreenState extends State<OTPScreen> with TickerProviderStateMixin {
     return _controllers.map((controller) => controller.text).join();
   }
 
-  void _verifyOTP(String otp, String? verification, AppPalette palette) async {
+  Future<void> _showAlert(AppPalette palette, {required String title, required String message}) {
+    return Flushbar(
+      flushbarPosition: FlushbarPosition.BOTTOM,
+      title: title,
+      message: message,
+      backgroundColor: palette.card,
+      titleColor: palette.gold,
+      messageColor: palette.textPrimary,
+      duration: const Duration(seconds: 3),
+    ).show(context);
+  }
+
+  Future<void> _verifyOTP(String otp, String? verification, AppPalette palette) async {
+    // Guard against calling with an incomplete code (e.g. auto-submit firing early).
+    if (otp.length != 6) return;
+
     setState(() => isLoading = true);
 
-    UserCredential? user = await _authService.verifyOTP(otp, verification);
+    try {
+      final UserCredential? user = await _authService.verifyOTP(otp, verification);
 
-    setState(() => isLoading = false);
+      if (!mounted) return;
 
-    if (user != null) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => UserMemberHomePage(phoneNumber: widget.phoneNumber!)),
-      );
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("OTP Verified Successfully")),
-      );
-    } else {
-      print("OTP RESPONSE!");
-      print(user);
-      await Flushbar(
-        flushbarPosition: FlushbarPosition.BOTTOM,
-        title: 'Alert',
-        message: 'Please enter a valid OTP!',
-        backgroundColor: palette.card,
-        titleColor: palette.gold,
-        messageColor: palette.textPrimary,
-        duration: const Duration(seconds: 3),
-      ).show(context);
+      if (user != null) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => UserMemberHomePage(phoneNumber: widget.phoneNumber!)),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("OTP Verified Successfully")),
+        );
+      } else {
+        await _showAlert(palette, title: 'Alert', message: 'Please enter a valid OTP!');
+      }
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      final message = switch (e.code) {
+        'invalid-verification-code' => 'That code doesn\'t look right. Please try again.',
+        'session-expired' => 'This code has expired. Please request a new one.',
+        _ => e.message ?? 'Verification failed. Please try again.',
+      };
+      await _showAlert(palette, title: 'Verification failed', message: message);
+    } catch (e) {
+      if (!mounted) return;
+      await _showAlert(palette, title: 'Error', message: 'Something went wrong. Please check your connection and try again.');
+    } finally {
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
@@ -178,7 +197,7 @@ class _OTPScreenState extends State<OTPScreen> with TickerProviderStateMixin {
           height: 56,
           margin: const EdgeInsets.symmetric(horizontal: 5),
           decoration: BoxDecoration(
-            color: palette.card, // same as card bg, not a separate boxed fill — avoids the "heavy box" look
+            color: palette.card,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: focused ? palette.gold : palette.divider.withOpacity(0.3),
@@ -204,6 +223,9 @@ class _OTPScreenState extends State<OTPScreen> with TickerProviderStateMixin {
               }
               if (index == 5 && value.isNotEmpty) {
                 FocusScope.of(context).unfocus();
+                // Auto-submit once the last digit is entered.
+                final palette = context.palette;
+                _verifyOTP(getOtp(), widget.verificationId, palette);
               }
             },
             decoration: const InputDecoration(
@@ -219,11 +241,7 @@ class _OTPScreenState extends State<OTPScreen> with TickerProviderStateMixin {
 
   Widget _buildVerifyButton(AppPalette palette) {
     return _TapScale(
-      onTap: () {
-        String otp = getOtp();
-        print("Entered OTP: $otp");
-        _verifyOTP(otp, widget.verificationId, palette);
-      },
+      onTap: () => _verifyOTP(getOtp(), widget.verificationId, palette),
       child: Container(
         width: double.infinity,
         height: 54,

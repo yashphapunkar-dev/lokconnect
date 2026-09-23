@@ -41,6 +41,17 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
 
+     if target.name == 'device_info_plus'
+      privacy_manifest_src = File.join(__dir__, 'PrivacyManifests', 'device_info_plus', 'PrivacyInfo.xcprivacy')
+      if File.exist?(privacy_manifest_src)
+        file_ref = installer.pods_project.new_file(privacy_manifest_src)
+        target.resources_build_phase.add_file_reference(file_ref, true)
+        puts "Added PrivacyInfo.xcprivacy to device_info_plus target"
+      else
+        puts "WARNING: PrivacyInfo.xcprivacy not found at #{privacy_manifest_src}"
+      end
+    end
+
     # Align pod deployment targets with iOS 17.0 & allow non-modular header imports
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'

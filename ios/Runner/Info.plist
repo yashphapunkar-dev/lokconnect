@@ -34,7 +34,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>com.googleusercontent.apps.707519257282-bfupa0jbk4tvi8nbv9rf7l9c86samq3b</string>
-				<string>app-1-707519257282-ios-fff508e34ff135aa87b95b</string>
+				<string>app-1-707519257282-ios-689d0deb74ee362b87b95b</string>
 			</array>
 		</dict>
 	</array>
@@ -44,6 +44,10 @@
 	<true/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>UIDeviceFamily</key>
+	<array>
+    <integer>1</integer>
+	</array>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
